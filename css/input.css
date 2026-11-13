@@ -1,0 +1,30 @@
+@import "tailwindcss";
+@source "../app/**/*.py";
+@source "../js/**/*.js";
+
+@theme {
+  --font-display: "Avenir", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --font-sans: "Avenir", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --color-ink: #2b2422;
+  --color-ink-soft: #5c534f;
+  --color-paper: #f5dfbc;
+  --color-paper-2: #edd2a8;
+  --color-cream: #faf0dc;
+  --color-terracotta: #d26e36;
+  --color-terracotta-deep: #a84f24;
+  --color-saffron: #f8b658;
+  --color-line: #e4cda8;
+  --color-night: #2b2422;
+  --color-night-2: #3a322f;
+  --color-black: #000000;
+}
+
+#site-nav.is-open {
+  display: flex;
+}
+
+#kds:fullscreen {
+  overflow: auto;
+  background: #1c1612;
+  padding: 1rem;
+}

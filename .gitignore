@@ -1,0 +1,23 @@
+data/
+.tools/
+.publish/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+.env.*
+!.env.example
+node_modules/
+web/node_modules/
+.vercel/
+web/.vercel/
+public/
+
+# Local Netlify folder
+.netlify
+
+# Heavy / temp media not needed in repo
+videos/From*.mp4
+videos/make-hero.ps1
+.vercel
+.env*

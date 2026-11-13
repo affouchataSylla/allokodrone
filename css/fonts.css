@@ -1,0 +1,57 @@
+/* Avenir Book (400) + Avenir Medium (500) — placez les fichiers dans /fonts */
+@font-face {
+  font-family: "Avenir";
+  src:
+    local("Avenir Book"),
+    local("Avenir"),
+    url("/fonts/Avenir-Book.woff2") format("woff2"),
+    url("/fonts/Avenir-Book.woff") format("woff"),
+    url("/fonts/Avenir-Book.ttf") format("truetype"),
+    url("/fonts/Avenir-Book.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Avenir";
+  src:
+    local("Avenir Medium"),
+    local("Avenir Next Medium"),
+    url("/fonts/Avenir-Medium.woff2") format("woff2"),
+    url("/fonts/Avenir-Medium.woff") format("woff"),
+    url("/fonts/Avenir-Medium.ttf") format("truetype"),
+    url("/fonts/Avenir-Medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Les titres utilisent souvent font-semibold / bold → on mappe vers Medium */
+@font-face {
+  font-family: "Avenir";
+  src:
+    local("Avenir Medium"),
+    local("Avenir Next Medium"),
+    url("/fonts/Avenir-Medium.woff2") format("woff2"),
+    url("/fonts/Avenir-Medium.woff") format("woff"),
+    url("/fonts/Avenir-Medium.ttf") format("truetype"),
+    url("/fonts/Avenir-Medium.otf") format("opentype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Avenir";
+  src:
+    local("Avenir Medium"),
+    local("Avenir Next Medium"),
+    url("/fonts/Avenir-Medium.woff2") format("woff2"),
+    url("/fonts/Avenir-Medium.woff") format("woff"),
+    url("/fonts/Avenir-Medium.ttf") format("truetype"),
+    url("/fonts/Avenir-Medium.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
