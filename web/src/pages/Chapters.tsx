@@ -371,17 +371,18 @@ export function Avis() {
   }
 
   return (
-    <article className="mx-auto max-w-6xl px-4 py-10 lg:py-14">
-      <p className="text-xs uppercase tracking-[0.16em] text-terracotta">Avis</p>
+    <article className="bg-paper-2">
+    <div className="mx-auto max-w-6xl px-4 py-10 lg:py-14">
+      <p className="text-xs font-medium uppercase tracking-[0.18em] text-terracotta">Avis</p>
       <div className="mt-3 flex flex-wrap items-end justify-between gap-6">
         <div className="max-w-2xl">
-          <h1 className="font-display text-5xl leading-[0.92] sm:text-6xl">
+          <h1 className="font-display text-[clamp(2.1rem,8vw,3.75rem)] leading-[0.92] text-ink">
             Ils ont goûté, <span className="italic text-terracotta">ils témoignent</span>
           </h1>
         </div>
         {average != null && count > 0 ? (
-          <div className="border border-line bg-cream px-5 py-4">
-            <p className="font-display text-4xl leading-none">{fmtNote(average)}</p>
+          <div className="rounded-xl border border-line bg-cream px-5 py-4">
+            <p className="font-display text-4xl leading-none text-ink">{fmtNote(average)}</p>
             <Stars value={Math.round(average)} label={`${fmtNote(average)} sur 5`} size="h-5 w-5" />
             <p className="mt-2 text-sm text-ink-soft">{count} avis</p>
           </div>
@@ -391,19 +392,19 @@ export function Avis() {
       <Alert errors={errors} />
 
       <div className="mt-10 grid items-start gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <figure className="border border-line bg-cream px-6 py-8 sm:px-8">
+        <figure className="rounded-xl border border-line bg-cream px-6 py-8 sm:px-8">
           <p className="text-xs uppercase tracking-[0.16em] text-terracotta">{review.source}</p>
-          <blockquote className="mt-4">
-            <p className="font-display text-3xl leading-snug sm:text-4xl">« {review.quote} »</p>
+          <blockquote className="mt-4 border-l-2 border-terracotta pl-5">
+            <p className="font-display text-lg leading-relaxed text-ink sm:text-xl">« {review.quote} »</p>
           </blockquote>
           <figcaption className="mt-8 flex flex-wrap items-baseline justify-between gap-3 border-t border-line pt-5 text-sm">
-            <span>{review.author}</span>
+            <span className="font-medium text-ink">{review.author}</span>
             <span className="text-ink-soft">{review.place}</span>
           </figcaption>
         </figure>
 
-        <section className="border border-line bg-cream px-6 py-8 sm:px-8" aria-label="Répartition des notes">
-          <h2 className="font-display text-3xl leading-none">Répartition</h2>
+        <section className="rounded-xl border border-line bg-cream px-6 py-8 sm:px-8" aria-label="Répartition des notes">
+          <h2 className="font-display text-3xl leading-none text-ink">Répartition</h2>
           <ul className="mt-6 space-y-3">
             {(board?.histogram ?? [5, 4, 3, 2, 1].map((stars) => ({ stars, count: 0 }))).map((item) => (
               <li key={item.stars}>
@@ -428,8 +429,8 @@ export function Avis() {
       </div>
 
       <div className="mt-12 grid items-start gap-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-        <section className="scroll-mt-24 border border-line bg-cream px-5 py-5 sm:px-6" id="laisser-un-avis">
-          <h2 className="font-display text-2xl leading-none sm:text-3xl">Laisser un avis</h2>
+        <section className="scroll-mt-24 rounded-xl border border-line bg-cream px-5 py-5 sm:px-6" id="laisser-un-avis">
+          <h2 className="font-display text-2xl leading-none text-ink sm:text-3xl">Laisser un avis</h2>
           {eligible && !eligible.canReview ? (
             <p className="mt-2 text-sm text-ink-soft" role="status">{eligible.reason}</p>
           ) : null}
@@ -490,9 +491,9 @@ export function Avis() {
           </form>
         </section>
 
-        <section className="border border-line bg-paper-2 px-5 py-6 sm:px-6 sm:py-7" aria-label="Avis clients">
+        <section className="rounded-xl border border-line bg-cream px-5 py-6 sm:px-6 sm:py-7" aria-label="Avis clients">
           <div className="flex flex-wrap items-end justify-between gap-3">
-            <h2 className="font-display text-3xl leading-none">Sur le site</h2>
+            <h2 className="font-display text-3xl leading-none text-ink">Sur le site</h2>
             <div className="flex flex-wrap gap-2">
               {[
                 ["date", "Plus récents"],
@@ -502,7 +503,7 @@ export function Avis() {
                 <button
                   key={value}
                   type="button"
-                  className={`min-h-9 border px-2.5 text-sm transition-colors duration-200 ${sort === value ? "border-ink bg-cream" : "border-line bg-cream/60 text-ink-soft hover:border-ink hover:text-ink"}`}
+                  className={`min-h-9 rounded-xl border px-2.5 text-sm transition-colors duration-200 ${sort === value ? "border-ink bg-cream" : "border-line bg-cream/60 text-ink-soft hover:border-ink hover:text-ink"}`}
                   onClick={() => setFilter({ tri: value, page: 1 })}
                 >
                   {label}
@@ -524,10 +525,10 @@ export function Avis() {
           <ul className="mt-6 grid gap-3">
             {reviews.map((item) => (
               <li key={item.id} className="min-w-0">
-                <article className="flex h-full flex-col border border-line bg-cream px-4 py-4 transition-[border-color,transform] duration-300 hover:-translate-y-0.5 hover:border-ink/30">
+                <article className="flex h-full flex-col rounded-xl border border-line bg-paper px-4 py-4 transition-[border-color,transform] duration-300 hover:-translate-y-0.5 hover:border-terracotta/40">
                   <header className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <span className="grid h-10 w-10 place-items-center bg-paper-2 font-display text-sm text-terracotta" aria-hidden="true">
+                      <span className="grid h-10 w-10 place-items-center rounded-xl bg-paper-2 font-display text-sm text-terracotta" aria-hidden="true">
                         {item.initials}
                       </span>
                       <div>
@@ -562,14 +563,14 @@ export function Avis() {
                   <footer className="mt-4 flex flex-wrap gap-2 border-t border-line pt-3">
                     <button
                       type="button"
-                      className={`min-h-9 border px-3 text-sm transition-colors duration-200 ${item.votedUseful ? "border-ink bg-cream" : "border-line hover:border-ink"}`}
+                      className={`min-h-9 rounded-xl border px-3 text-sm transition-colors duration-200 ${item.votedUseful ? "border-ink bg-cream" : "border-line hover:border-ink"}`}
                       onClick={() => void voteUseful(item.id)}
                     >
                       Utile · {item.usefulCount}
                     </button>
                     <button
                       type="button"
-                      className="min-h-9 border border-line px-3 text-sm text-ink-soft transition-colors duration-200 hover:border-ink hover:text-ink"
+                      className="min-h-9 rounded-xl border border-line px-3 text-sm text-ink-soft transition-colors duration-200 hover:border-ink hover:text-ink"
                       onClick={() => setReportId(item.id)}
                     >
                       Signaler
@@ -578,14 +579,14 @@ export function Avis() {
                       <>
                         <button
                           type="button"
-                          className="min-h-9 border border-line px-3 text-sm transition-colors duration-200 hover:border-ink"
+                          className="min-h-9 rounded-xl border border-line px-3 text-sm transition-colors duration-200 hover:border-ink"
                           onClick={() => startEdit(item)}
                         >
                           Modifier
                         </button>
                         <button
                           type="button"
-                          className="min-h-9 border border-line px-3 text-sm text-terracotta-deep transition-colors duration-200 hover:border-ink"
+                          className="min-h-9 rounded-xl border border-line px-3 text-sm text-terracotta-deep transition-colors duration-200 hover:border-ink"
                           onClick={() => void removeOwn(item.id)}
                         >
                           Supprimer
@@ -646,24 +647,24 @@ export function Avis() {
       ) : null}
 
       <section className="mt-12 scroll-mt-24 border-t border-line pt-10" aria-labelledby="faq-titre">
-        <p className="text-xs uppercase tracking-[0.16em] text-terracotta">FAQ</p>
-        <h2 id="faq-titre" className="mt-2 font-display text-3xl leading-none">Questions fréquentes</h2>
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-terracotta">FAQ</p>
+        <h2 id="faq-titre" className="mt-2 font-display text-3xl leading-none text-ink">Questions fréquentes</h2>
         <div className="mt-5 grid gap-3 md:grid-cols-2">
           {questions.map((item, index) => {
             const open = openFaq === index;
             const panelId = `faq-reponse-${index}`;
             return (
-              <div key={item.q} className="border border-line bg-cream">
+              <div key={item.q} className="rounded-xl border border-line bg-cream">
                 <h3>
                   <button
                     type="button"
-                    className={`flex w-full items-center justify-between gap-3 px-4 text-left font-display text-base leading-snug focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta ${open ? "pb-2 pt-3.5" : "py-3.5"}`}
+                    className={`flex w-full items-center justify-between gap-3 px-4 text-left font-display text-base leading-snug text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta ${open ? "pb-2 pt-3.5" : "py-3.5"}`}
                     aria-expanded={open}
                     aria-controls={panelId}
                     onClick={() => setOpenFaq(open ? -1 : index)}
                   >
                     <span className="min-w-0">{item.q}</span>
-                    <span className="grid h-7 w-7 shrink-0 place-items-center border border-line text-sm leading-none text-terracotta" aria-hidden="true">{open ? "–" : "+"}</span>
+                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-line text-sm leading-none text-terracotta" aria-hidden="true">{open ? "–" : "+"}</span>
                   </button>
                 </h3>
                 <div id={panelId} role="region" hidden={!open} className="px-4 pb-3.5">
@@ -676,6 +677,7 @@ export function Avis() {
           })}
         </div>
       </section>
+    </div>
     </article>
   );
 }

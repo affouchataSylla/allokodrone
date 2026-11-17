@@ -233,14 +233,14 @@ export function ServiceBar() {
     : address;
 
   return (
-    <div className="sticky top-16 z-30 border-b border-line bg-cream text-ink [text-shadow:none] md:top-20">
+    <div className="relative z-10 border-b border-line bg-cream text-ink">
       <div className="mx-auto grid max-w-7xl grid-cols-3 divide-x divide-line">
         <div className="relative min-w-0" ref={modeRef}>
-          <div className="flex min-h-16 w-full items-center gap-2 px-3 py-2 text-left sm:gap-3 sm:px-5">
+          <div className="flex min-h-12 w-full items-center gap-1.5 px-2 py-1.5 text-left sm:min-h-16 sm:gap-3 sm:px-5 sm:py-2">
             {delivered ? <Pin /> : <Bag />}
             <span className="min-w-0">
               <button
-                className="flex items-center gap-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-terracotta sm:text-xs"
+                className="flex items-center gap-1 text-[0.62rem] font-semibold uppercase tracking-[0.1em] text-terracotta sm:text-xs sm:tracking-[0.12em]"
                 type="button"
                 aria-expanded={panel === "mode"}
                 aria-haspopup="listbox"
@@ -250,11 +250,11 @@ export function ServiceBar() {
                 <Chevron />
               </button>
               {delivered ? (
-                <button className="mt-0.5 line-clamp-2 text-left text-xs text-ink sm:text-sm" type="button" onClick={openWhere}>
+                <button className="mt-0.5 line-clamp-2 text-left text-[0.7rem] leading-snug text-ink sm:text-sm" type="button" onClick={openWhere}>
                   {place}
                 </button>
               ) : (
-                <span className="mt-0.5 line-clamp-2 block text-xs text-ink sm:text-sm">{address}</span>
+                <span className="mt-0.5 line-clamp-2 block text-[0.7rem] leading-snug text-ink sm:text-sm">{address}</span>
               )}
             </span>
           </div>
@@ -297,26 +297,26 @@ export function ServiceBar() {
         </div>
         <div className="min-w-0">
           <button
-            className="flex min-h-16 w-full flex-col justify-center px-3 py-2 text-left sm:px-5"
+            className="flex min-h-12 w-full flex-col justify-center px-2 py-1.5 text-left sm:min-h-16 sm:px-5 sm:py-2"
             type="button"
             aria-haspopup="dialog"
             aria-expanded={panel === "when"}
             onClick={openWhen}
           >
-            <span className="flex items-center gap-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-terracotta sm:text-xs">
+            <span className="flex items-center gap-1 text-[0.62rem] font-semibold uppercase tracking-[0.1em] text-terracotta sm:text-xs sm:tracking-[0.12em]">
               {asap ? "Au plus tôt" : "Créneau"}
               <Chevron />
             </span>
-            <span className="mt-0.5 text-xs text-ink sm:text-sm">
+            <span className="mt-0.5 text-[0.7rem] leading-snug text-ink sm:text-sm">
               {chosen ? slotDetail(chosen) : "Aucun créneau ouvert"}
             </span>
           </button>
         </div>
-        <Link className="flex min-h-16 min-w-0 flex-col justify-center px-3 py-2 sm:px-5" to="/contact">
-          <span className="truncate text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-terracotta sm:text-xs">
+        <Link className="flex min-h-12 min-w-0 flex-col justify-center px-2 py-1.5 sm:min-h-16 sm:px-5 sm:py-2" to="/contact">
+          <span className="truncate text-[0.62rem] font-semibold uppercase tracking-[0.1em] text-terracotta sm:text-xs sm:tracking-[0.12em]">
             {session.restaurant.name}
           </span>
-          <span className="mt-0.5 text-xs underline decoration-line underline-offset-4 sm:text-sm">Nous trouver</span>
+          <span className="mt-0.5 text-[0.7rem] underline decoration-line underline-offset-4 sm:text-sm">Nous trouver</span>
         </Link>
       </div>
       {panel === "when" ? (
@@ -381,7 +381,7 @@ export function ServiceBar() {
               </label>
             </div>
             <button
-              className="mt-4 inline-flex min-h-12 items-center gap-2 border border-line px-3 text-sm text-ink hover:border-ink disabled:opacity-50"
+              className="mt-4 inline-flex min-h-12 items-center gap-2 rounded-xl border border-line px-3 text-sm text-ink hover:border-ink disabled:opacity-50"
               type="button"
               disabled={locatePending || wherePending}
               onClick={useLocationNow}

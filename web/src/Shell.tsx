@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router";
-import { adminUrl, asset } from "./base";
+import { asset } from "./base";
+import { CalendarMark, InstagramMark, PinMark, PlaneMark } from "./components/brand/Marks";
 import { ServiceBar } from "./ServiceBar";
 import { useSession } from "./session";
 
@@ -11,7 +12,13 @@ function Item({ to, children, className = "" }: { to: string; children: string; 
     <NavLink
       to={to}
       end={to === "/"}
-      className={({ isActive }) => `${link} ${className} ${isActive ? "text-terracotta" : "text-cream"}`}
+      className={({ isActive }) =>
+        `${link} ${className} ${
+          isActive
+            ? "text-terracotta underline decoration-2 underline-offset-[0.55rem]"
+            : "text-cream"
+        }`
+      }
     >
       {children}
     </NavLink>
@@ -30,8 +37,10 @@ function BasketMark() {
   );
 }
 
-const hungry = "inline-flex h-11 shrink-0 items-center bg-terracotta px-3 text-sm font-semibold uppercase tracking-[0.14em] text-white [text-shadow:none] transition-colors duration-300 hover:bg-terracotta-deep sm:px-5";
-const cartLink = "inline-flex h-11 shrink-0 items-center gap-2 border border-cream/50 px-3 text-xs font-semibold uppercase tracking-[0.14em] text-cream transition-colors duration-300 hover:border-cream sm:px-4 sm:text-sm";
+const hungry =
+  "inline-flex h-9 shrink-0 items-center rounded-xl border border-cream/80 bg-terracotta px-3 text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-white transition-colors duration-300 hover:bg-terracotta-deep sm:h-10 sm:px-5 sm:text-sm";
+const cartLink =
+  "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl border border-cream/75 bg-transparent px-2.5 text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-cream transition-colors duration-300 hover:border-cream sm:h-10 sm:gap-2 sm:px-4 sm:text-sm";
 
 function MenuMark({ open }: { open: boolean }) {
   return (
@@ -55,12 +64,10 @@ function MenuMark({ open }: { open: boolean }) {
 export function Shell() {
   const { session, error, refresh } = useSession();
   const { pathname } = useLocation();
-  const home = pathname === "/";
   const [menuOpen, setMenuOpen] = useState(false);
-  const [overHero, setOverHero] = useState(false);
-  const melted = home && overHero;
   const count = session?.cartCount ?? 0;
   const restaurant = session?.restaurant;
+  const home = pathname === "/";
   const entries: [string, string][] = [
     ["/", "Accueil"],
     ["/concept", "Concept"],
@@ -85,66 +92,54 @@ export function Shell() {
     return () => window.removeEventListener("keydown", onKey);
   }, [menuOpen]);
 
-  useEffect(() => {
-    if (!home) return;
-    const update = () => {
-      const hero = document.getElementById("accueil");
-      if (!hero) {
-        setOverHero(false);
-        return;
-      }
-      setOverHero(window.scrollY < 16 && hero.getBoundingClientRect().bottom > 72);
-    };
-    update();
-    const root = document.getElementById("contenu");
-    const observer = root ? new MutationObserver(update) : null;
-    observer?.observe(root as Node, { childList: true, subtree: true });
-    window.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
-    return () => {
-      observer?.disconnect();
-      window.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
-    };
-  }, [home]);
-
   return (
-    <div className="min-h-screen overflow-x-clip bg-paper font-sans text-ink antialiased">
+    <div className="flex min-h-screen flex-col overflow-x-clip bg-paper font-sans text-ink antialiased">
       <a
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-cream focus:px-3 focus:py-2"
         href="#contenu"
       >
         Aller au contenu
       </a>
-      <header className={melted
-        ? "sticky top-0 z-40 bg-transparent text-cream [text-shadow:0_1px_2px_rgb(43_36_34_/_0.95),0_0_14px_rgb(43_36_34_/_0.8)]"
-        : "sticky top-0 z-40 bg-night text-cream"}>
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 md:grid md:h-20 md:grid-cols-[auto_minmax(0,1fr)_auto] md:gap-10 md:px-8">
-          <Link className="shrink-0" to="/">
-            <img className={`h-10 w-auto md:h-12 ${melted ? "drop-shadow-[0_2px_6px_rgba(28,22,18,0.9)]" : ""}`} src={asset("images/logo-light.png")} width="532" height="299" alt="ALLOKODRONE" />
+
+      <header className="relative z-50 shrink-0 border-b border-cream/10 bg-night text-cream">
+        <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 md:h-[4.5rem] md:gap-6 md:px-6 lg:gap-8 lg:px-8">
+          <Link className="flex h-10 w-[9.5rem] shrink-0 items-center overflow-hidden md:h-11 md:w-[11rem]" to="/">
+            <img
+              className="max-h-10 w-auto max-w-full object-contain object-left md:max-h-11"
+              src={asset("images/logo-light.png")}
+              width="176"
+              height="99"
+              alt="ALLOKODRONE"
+            />
           </Link>
-          <nav className="hidden min-w-0 md:block" aria-label="Navigation principale">
-            <ul className="flex items-center justify-center gap-6 whitespace-nowrap">
+
+          <nav className="hidden min-w-0 flex-1 lg:block" aria-label="Navigation principale">
+            <ul className="flex items-center justify-center gap-5 xl:gap-7">
               {entries.map(([to, label]) => (
-                <li key={to}><Item to={to}>{label}</Item></li>
+                <li key={to}>
+                  <Item to={to}>{label}</Item>
+                </li>
               ))}
             </ul>
           </nav>
-          <div className="flex shrink-0 items-center gap-2">
+
+          <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
             <NavLink
               to="/panier"
-              className={({ isActive }) => `${cartLink} ${isActive ? "border-terracotta text-terracotta" : ""}`}
+              className={({ isActive }) =>
+                `${cartLink} ${isActive ? "border-terracotta text-terracotta" : ""} max-lg:h-10 max-lg:min-w-10 max-lg:justify-center max-lg:gap-1 max-lg:px-2`
+              }
               aria-label={count > 0 ? `Panier, ${count} article${count > 1 ? "s" : ""}` : "Panier"}
             >
               <BasketMark />
-              Panier
-              {count > 0 ? <span className="tabular-nums">{count}</span> : null}
+              <span className="hidden lg:inline">Panier</span>
+              {count > 0 ? <span className="tabular-nums text-[0.65rem] lg:text-[0.7rem]">{count}</span> : null}
             </NavLink>
-            <Link className={hungry} to={count > 0 ? "/panier" : "/carte"}>
-              J'ai faim
+            <Link className={`${hungry} hidden lg:inline-flex`} to={count > 0 ? "/panier" : "/carte"}>
+              J&apos;ai faim
             </Link>
             <button
-              className="inline-flex h-10 w-10 items-center justify-center text-cream md:hidden"
+              className="inline-flex h-10 w-10 items-center justify-center text-cream lg:hidden"
               type="button"
               aria-expanded={menuOpen}
               aria-controls="menu-mobile"
@@ -155,16 +150,24 @@ export function Shell() {
             </button>
           </div>
         </div>
-        <nav id="menu-mobile" className={`${menuOpen ? "block" : "hidden"} border-t border-cream/15 bg-night px-4 py-2 md:hidden`} aria-label="Sections">
+
+        <nav
+          id="menu-mobile"
+          className={`${menuOpen ? "block" : "hidden"} border-t border-cream/15 bg-night px-4 py-2 lg:hidden`}
+          aria-label="Sections"
+        >
           <ul className="flex flex-col">
             {entries.map(([to, label]) => (
               <li key={to} className="border-b border-cream/10 last:border-b-0">
-                <Item className="py-3 text-base" to={to}>{label}</Item>
+                <Item className="py-3 text-base" to={to}>
+                  {label}
+                </Item>
               </li>
             ))}
           </ul>
         </nav>
       </header>
+
       {error ? (
         <div className="border-b border-line bg-paper-2 px-4 py-3 text-sm" role="alert">
           {error}{" "}
@@ -173,47 +176,97 @@ export function Shell() {
           </button>
         </div>
       ) : null}
-      <ServiceBar />
-      <main id="contenu">
+
+      {!home ? <ServiceBar /> : null}
+
+      <main id="contenu" className="relative z-0 min-w-0 flex-1">
         <div key={pathname} className="motion-fade">
           <Outlet />
         </div>
       </main>
-      <footer className="mt-10 border-t border-line bg-night text-cream sm:mt-14">
-        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
+
+      <footer className="relative z-0 mt-auto bg-night text-cream">
+        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8 lg:px-8 lg:py-14">
           <div>
-            <Link to="/">
-              <img className="h-14 w-auto" src={asset("images/logo-light.png")} width="532" height="299" alt="ALLOKODRONE" />
+            <Link to="/" className="inline-block">
+              <img className="max-h-12 w-auto max-w-[10rem] object-contain" src={asset("images/logo-light.png")} width="176" height="99" alt="ALLOKODRONE" />
             </Link>
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-cream/75">L'Afrique servie à grande vitesse.</p>
-          </div>
-          <div>
-            <ul className="space-y-2 text-sm lg:pt-1">
-              <li><Link className="hover:text-saffron" to="/carte">La carte</Link></li>
-              <li><Link className="hover:text-saffron" to="/panier">Panier</Link></li>
-              <li><Link className="hover:text-saffron" to="/contact">Contact</Link></li>
-              <li><a className="hover:text-saffron" href={adminUrl("/admin")}>Admin</a></li>
-            </ul>
-          </div>
-          <div>
-            <h2 className="font-display text-xl">Restaurant</h2>
-            <p className="mt-3 text-sm leading-relaxed text-cream/75">{restaurant?.address ?? "24 rue Emmanuel Arago, 93130 Noisy-le-Sec"}</p>
-            <p className="mt-3 text-sm text-cream/75">{restaurant?.hoursLabel}</p>
-            <p className="mt-3 text-sm">
-              <a className="hover:text-saffron" href={restaurant?.maps ?? "https://www.google.com/maps/dir/?api=1&destination=24+rue+Emmanuel+Arago+93130+Noisy-le-Sec"} target="_blank" rel="noopener noreferrer">Itinéraire</a>
+            <p className="mt-4 max-w-[14rem] text-[0.7rem] font-semibold uppercase leading-relaxed tracking-[0.14em] text-cream/85">
+              L&apos;Afrique servie à grande vitesse.
             </p>
           </div>
-          <div>
-            <h2 className="font-display text-xl">Réseaux</h2>
-            <ul className="mt-3 space-y-2 text-sm">
-              <li><a className="hover:text-saffron" href={restaurant?.instagram ?? "https://www.instagram.com/alloko_drone/"} target="_blank" rel="noopener noreferrer">Instagram</a></li>
+          <nav aria-label="Pied de page" className="text-sm lg:pt-2">
+            <ul className="space-y-2.5">
+              <li>
+                <Link className="transition-colors hover:text-terracotta" to="/carte">
+                  La carte
+                </Link>
+              </li>
+              <li>
+                <Link className="transition-colors hover:text-terracotta" to="/panier">
+                  Panier
+                </Link>
+              </li>
+              <li>
+                <Link className="transition-colors hover:text-terracotta" to="/contact">
+                  Contact
+                </Link>
+              </li>
+            </ul>
+          </nav>
+          <div className="lg:pt-1">
+            <h2 className="text-sm font-semibold tracking-wide">Restaurant</h2>
+            <ul className="mt-4 space-y-3 text-sm text-cream/80">
+              <li className="flex items-start gap-2.5">
+                <PinMark className="mt-0.5 h-[18px] w-[18px] shrink-0 text-terracotta" />
+                <span>{restaurant?.address ?? "24 rue Emmanuel Arago, 93130 Noisy-le-Sec"}</span>
+              </li>
+              {(restaurant?.hoursLines?.length
+                ? restaurant.hoursLines
+                : [restaurant?.hoursLabel ?? "Lundi – samedi : 11h30 – 22h30"]
+              ).map((line) => (
+                <li key={line} className="flex items-start gap-2.5">
+                  <CalendarMark className="mt-0.5 h-[18px] w-[18px] shrink-0 text-terracotta" />
+                  <span>{line.replace(/ · /g, " : ")}</span>
+                </li>
+              ))}
+              <li>
+                <a
+                  className="inline-flex items-center gap-2.5 transition-colors hover:text-terracotta"
+                  href={
+                    restaurant?.maps ??
+                    "https://www.google.com/maps/dir/?api=1&destination=24+rue+Emmanuel+Arago+93130+Noisy-le-Sec"
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <PlaneMark className="h-[18px] w-[18px] shrink-0 text-terracotta" />
+                  Itinéraire
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div className="lg:pt-1">
+            <h2 className="text-sm font-semibold tracking-wide">Réseaux</h2>
+            <ul className="mt-4 space-y-3 text-sm">
+              <li>
+                <a
+                  className="inline-flex items-center gap-2.5 transition-colors hover:text-terracotta"
+                  href={restaurant?.instagram ?? "https://www.instagram.com/alloko_drone/"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <InstagramMark className="h-[18px] w-[18px] shrink-0 text-terracotta" />
+                  Instagram
+                </a>
+              </li>
             </ul>
           </div>
         </div>
-        <div className="border-t border-cream/15">
-          <div className="mx-auto max-w-6xl px-4 py-4 text-xs text-cream/60">
-            <p>© 2026 ALLOKODRONE. Tous droits réservés.</p>
-          </div>
+        <div className="border-t border-cream/20">
+          <p className="mx-auto max-w-6xl px-4 py-4 text-center text-xs text-cream/55 lg:px-8">
+            © 2026 ALLOKODRONE. Tous droits réservés.
+          </p>
         </div>
       </footer>
     </div>

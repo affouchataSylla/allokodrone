@@ -82,25 +82,40 @@ def user_by_id(conn, user_id):
     return conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
 
 
+_admin_synced = set()
+
+
 def ensure_admin(conn, email, password):
     if not email or not password:
         return None
-    existing = conn.execute(
-        "SELECT id FROM users WHERE email = ? AND role = 'admin'",
-        (email.strip().lower(),),
-    ).fetchone()
-    if existing:
-        return existing["id"]
+    email = email.strip().lower()
     if len(password) < 10:
         raise ValueError("Le mot de passe administrateur doit contenir au moins 10 caracteres.")
+    existing = conn.execute(
+        "SELECT id, password_hash FROM users WHERE email = ? AND role = 'admin'",
+        (email,),
+    ).fetchone()
+    if existing:
+        # Aligne le hash sur les variables d'environnement (Vercel / prod)
+        # une seule fois par process pour éviter le coût PBKDF2 à chaque requête.
+        marker = f"{email}:{existing['id']}"
+        if marker not in _admin_synced:
+            if not verify_password(password, existing["password_hash"]):
+                conn.execute(
+                    "UPDATE users SET password_hash = ? WHERE id = ?",
+                    (hash_password(password), existing["id"]),
+                )
+            _admin_synced.add(marker)
+        return existing["id"]
     now = iso(utc_now())
     cur = conn.execute(
         """
         INSERT INTO users (email, password_hash, name, phone, role, created_at)
         VALUES (?, ?, ?, ?, 'admin', ?)
         """,
-        (email.strip().lower(), hash_password(password), "Administration", "", now),
+        (email, hash_password(password), "Administration", "", now),
     )
+    _admin_synced.add(f"{email}:{cur.lastrowid}")
     return cur.lastrowid
 
 

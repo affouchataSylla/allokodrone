@@ -1,7 +1,28 @@
+import os
 import sqlite3
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def remote_database_url():
+    return (
+        os.environ.get("TURSO_DATABASE_URL")
+        or os.environ.get("LIBSQL_URL")
+        or ""
+    ).strip()
+
+
+def remote_auth_token():
+    return (
+        os.environ.get("TURSO_AUTH_TOKEN")
+        or os.environ.get("LIBSQL_AUTH_TOKEN")
+        or ""
+    ).strip()
+
+
+def uses_remote_db():
+    return bool(remote_database_url())
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS users (
@@ -218,9 +239,26 @@ CREATE TABLE IF NOT EXISTS notifications (
 """
 
 
-def connect(path):
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(path, isolation_level=None)
+def connect(path=None):
+    url = remote_database_url()
+    if url:
+        import turso_serverless
+
+        conn = turso_serverless.connect(
+            url,
+            auth_token=remote_auth_token() or None,
+            isolation_level=None,
+        )
+        conn.row_factory = turso_serverless.Row
+        try:
+            conn.execute("PRAGMA foreign_keys = ON")
+        except Exception:
+            pass
+        return conn
+
+    db_path = path or str(ROOT / "data" / "allokodrone.db")
+    Path(db_path).parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(db_path, isolation_level=None)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
@@ -253,7 +291,7 @@ def _ensure_driver_role(conn):
     )
 
 
-def init_db(path):
+def init_db(path=None):
     conn = connect(path)
     conn.executescript(SCHEMA)
     _ensure_driver_role(conn)

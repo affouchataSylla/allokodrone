@@ -1,4 +1,5 @@
 import json
+import urllib.parse
 
 from app.auth import authenticate, destroy_session, register_customer, rotate_session, set_idempotency_key
 from app.cart import add_item, cart_count, remove_item, set_promo, update_quantity
@@ -17,12 +18,15 @@ from app.orders import (
     place_order,
 )
 from app.stripe_pay import (
+    _request,
     begin_checkout,
     cancel_payment,
     checkout_methods,
+    ensure_order_from_checkout,
     limited,
     payment_view,
     retry_payment,
+    stripe_configured,
     verify_return,
 )
 from app.schedule import hours_label, load_json_setting
@@ -784,11 +788,23 @@ def _order(ctx, payload):
 def _verify_payment(ctx, payload):
     if limited(f"verify:{ctx.session['id']}"):
         return json_response({"ok": False, "errors": ["Trop de tentatives. Réessayez dans une minute."]}, 429)
-    order = _owned(ctx, payload.get("ref") or "")
+    ref = payload.get("ref") or ""
+    session_id = (payload.get("sessionId") or "").strip()
+    order = _owned(ctx, ref)
+    if not order and session_id.startswith("cs_") and stripe_configured(ctx.conn):
+        checkout, _error = _request(
+            "GET",
+            "/checkout/sessions/" + urllib.parse.quote(session_id),
+            conn=ctx.conn,
+        )
+        if checkout:
+            order = ensure_order_from_checkout(ctx.conn, checkout, claim_session_id=ctx.session["id"])
+            if order and order["public_ref"] != ref:
+                order = None
     if not order:
         return json_response({"ok": False, "errors": ["Commande introuvable."]}, 404)
-    state, error = verify_return(ctx.conn, order, (payload.get("sessionId") or "").strip())
-    fresh = order_for_session(ctx.conn, order["public_ref"], ctx.session["id"], ctx.user["id"] if ctx.user else None)
+    state, error = verify_return(ctx.conn, order, session_id)
+    fresh = order_for_session(ctx.conn, order["public_ref"], ctx.session["id"], ctx.user["id"] if ctx.user else None) or order
     body = {"ok": state == "paid", "ref": order["public_ref"], **payment_view(ctx.conn, fresh)}
     if error:
         body["errors"] = [error]

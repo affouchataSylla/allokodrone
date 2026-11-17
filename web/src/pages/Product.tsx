@@ -110,7 +110,7 @@ export function Product() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <Link
-        className="inline-flex h-12 w-12 items-center justify-center border border-line text-xl hover:border-ink"
+        className="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-line text-xl hover:border-ink"
         to={`/carte?categorie=${product.categorySlug}`}
         aria-label="Retour"
       >

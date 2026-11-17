@@ -121,7 +121,7 @@ export function ContactMap() {
             <span>24 rue Emmanuel Arago</span>
           </p>
         </div>
-        <p className="contact-map-caption">Comptoir ou drone, le bowl arrive chaud jusqu'à vous.</p>
+        <p className="contact-map-caption">Comptoir ou drone, le bowl arrive chaud jusqu&apos;à vous.</p>
       </div>
     </section>
   );

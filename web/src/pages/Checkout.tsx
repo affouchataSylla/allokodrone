@@ -311,33 +311,33 @@ export function Checkout() {
   return (
     <form className="mx-auto max-w-6xl px-4 py-8 lg:py-12" noValidate onSubmit={(event) => void submit(event)}>
       <p className="text-xs uppercase tracking-[0.16em] text-terracotta">Commande</p>
-      <h1 className="mt-3 font-display text-5xl leading-none">Retrait ou livraison</h1>
+      <h1 className="mt-3 font-display text-[clamp(1.85rem,7vw,3.25rem)] leading-none">Retrait ou livraison</h1>
       {data ? (
         <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-6">
             <fieldset>
               <legend className="mb-3 text-sm">Mode<Star /></legend>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className={`flex min-h-32 cursor-pointer flex-col justify-between border p-5 ${draft.mode === "pickup" ? "border-ink bg-cream" : "border-line bg-cream"}`}>
+              <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-4">
+                <label className={`flex min-h-[4.5rem] cursor-pointer flex-col justify-between rounded-xl border px-3.5 py-3 sm:min-h-28 sm:p-5 ${draft.mode === "pickup" ? "border-ink bg-cream" : "border-line bg-cream"}`}>
                   <span className="flex items-center justify-between gap-3">
-                    <span className="font-display text-3xl">Click &amp; Collect</span>
+                    <span className="font-display text-xl leading-none sm:text-3xl">Click &amp; Collect</span>
                     <input type="radio" name="mode" checked={draft.mode === "pickup"} onChange={() => { set("mode", "pickup"); setCollect({ ...collect, mode: "pickup" }); }} />
                   </span>
-                  <span className="mt-3 text-sm text-ink-soft">Je retire au restaurant</span>
+                  <span className="mt-1.5 text-xs text-ink-soft sm:mt-3 sm:text-sm">Je retire au restaurant</span>
                 </label>
-                <label className={`flex min-h-32 cursor-pointer flex-col justify-between p-5 text-cream ${draft.mode === "delivery" ? "bg-night ring-2 ring-saffron" : "bg-night"}`}>
+                <label className={`flex min-h-[4.5rem] cursor-pointer flex-col justify-between rounded-xl px-3.5 py-3 text-cream sm:min-h-28 sm:p-5 ${draft.mode === "delivery" ? "bg-night ring-2 ring-saffron" : "bg-night"}`}>
                   <span className="flex items-center justify-between gap-3">
-                    <span className="font-display text-3xl">Livraison</span>
+                    <span className="font-display text-xl leading-none sm:text-3xl">Livraison</span>
                     <input type="radio" name="mode" checked={draft.mode === "delivery"} onChange={() => { set("mode", "delivery"); setCollect({ ...collect, mode: "delivery" }); }} />
                   </span>
-                  <span className="mt-3 text-sm text-cream/75">Je me fais livrer</span>
+                  <span className="mt-1.5 text-xs text-cream/75 sm:mt-3 sm:text-sm">Je me fais livrer</span>
                 </label>
               </div>
               <div className="mt-2"><FieldMessage message={fieldErrors.mode} /></div>
             </fieldset>
             {draft.mode === "pickup" ? (
-            <section className="border border-line bg-cream p-5">
-              <h2 className="font-display text-3xl">Click &amp; Collect</h2>
+            <section className="rounded-xl border border-line bg-cream p-4 sm:p-5">
+              <h2 className="font-display text-2xl sm:text-3xl">Click &amp; Collect</h2>
               {data.points.length > 1 ? (
                 <div className="mt-3 space-y-2">
                   <p className="text-sm">Point de retrait<Star /></p>

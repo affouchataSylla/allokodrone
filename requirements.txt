@@ -1,0 +1,2 @@
+# Backend AllokoDrone — stdlib + Turso (SQLite distant pour Vercel)
+turso_serverless>=0.1.0

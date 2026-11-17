@@ -1,5 +1,6 @@
 """Paiement Stripe Checkout. Les cartes ne transitent jamais par ce serveur."""
 
+import base64
 import hashlib
 import hmac
 import json
@@ -9,6 +10,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import zlib
 
 from app.orders import STATUS_LABELS, order_events
 from app.schedule import load_json_setting
@@ -16,8 +18,156 @@ from app.schedule import load_json_setting
 API = "https://api.stripe.com/v1"
 MIN_CENTS = 50
 CURRENCY = "eur"
+_BLOB_CHUNK = 450
 _hits = {}
 _ready = {"fingerprint": "", "ok": None, "error": "", "at": 0.0}
+
+
+def _integrity_error():
+    try:
+        import turso_serverless
+
+        return (sqlite3.IntegrityError, turso_serverless.IntegrityError)
+    except Exception:
+        return (sqlite3.IntegrityError,)
+
+
+def _order_snapshot(order):
+    keys = (
+        "public_ref",
+        "user_id",
+        "session_id",
+        "status",
+        "mode",
+        "customer_name",
+        "email",
+        "phone",
+        "address_json",
+        "pickup_point_id",
+        "slot_id",
+        "zone_id",
+        "payment_method",
+        "payment_status",
+        "subtotal_cents",
+        "delivery_fee_cents",
+        "discount_cents",
+        "total_cents",
+        "promo_code",
+        "idempotency_key",
+        "snapshot_json",
+        "created_at",
+        "distance_meters",
+    )
+    available = set(order.keys()) if hasattr(order, "keys") else set(order)
+    return {key: order[key] for key in keys if key in available}
+
+
+def _pack_order_blob(order):
+    raw = json.dumps(_order_snapshot(order), ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    token = base64.urlsafe_b64encode(zlib.compress(raw, 9)).decode("ascii")
+    chunks = [token[i : i + _BLOB_CHUNK] for i in range(0, len(token), _BLOB_CHUNK)]
+    if not chunks or len(chunks) > 40:
+        return []
+    fields = [("metadata[obn]", str(len(chunks)))]
+    for index, chunk in enumerate(chunks):
+        fields.append((f"metadata[ob{index}]", chunk))
+    return fields
+
+
+def _unpack_order_blob(metadata):
+    if not isinstance(metadata, dict):
+        return None
+    try:
+        count = int(metadata.get("obn") or "0")
+    except (TypeError, ValueError):
+        return None
+    if count < 1 or count > 40:
+        return None
+    parts = []
+    for index in range(count):
+        piece = metadata.get(f"ob{index}")
+        if not isinstance(piece, str) or not piece:
+            return None
+        parts.append(piece)
+    try:
+        raw = zlib.decompress(base64.urlsafe_b64decode("".join(parts).encode("ascii")))
+        data = json.loads(raw.decode("utf-8"))
+    except (ValueError, zlib.error, json.JSONDecodeError, UnicodeDecodeError):
+        return None
+    if not isinstance(data, dict) or not isinstance(data.get("public_ref"), str):
+        return None
+    return data
+
+
+def ensure_order_from_checkout(conn, checkout, claim_session_id=None):
+    """Recrée une commande absente à partir des métadonnées Stripe (Vercel multi-instance)."""
+    metadata = checkout.get("metadata") or {}
+    reference = metadata.get("order_ref") or checkout.get("client_reference_id") or ""
+    if not reference:
+        return None
+    existing = conn.execute("SELECT * FROM orders WHERE public_ref = ?", (reference,)).fetchone()
+    if existing:
+        if claim_session_id and existing["session_id"] != claim_session_id:
+            conn.execute(
+                "UPDATE orders SET session_id = ? WHERE id = ? AND payment_status != 'paid'",
+                (claim_session_id, existing["id"]),
+            )
+            existing = conn.execute("SELECT * FROM orders WHERE id = ?", (existing["id"],)).fetchone()
+        return existing
+    data = _unpack_order_blob(metadata)
+    if not data or data.get("public_ref") != reference:
+        return None
+    if data.get("payment_method") != "stripe":
+        return None
+    session_id = claim_session_id or data.get("session_id")
+    try:
+        cur = conn.execute(
+            """
+            INSERT INTO orders (
+              public_ref, user_id, session_id, status, mode, customer_name, email, phone,
+              address_json, pickup_point_id, slot_id, zone_id, payment_method, payment_status,
+              subtotal_cents, delivery_fee_cents, discount_cents, total_cents, promo_code,
+              idempotency_key, snapshot_json, created_at, stripe_session_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'stripe', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                reference,
+                data.get("user_id"),
+                session_id,
+                data.get("status") or "received",
+                data.get("mode") or "delivery",
+                data.get("customer_name") or "",
+                data.get("email") or "",
+                data.get("phone") or "",
+                data.get("address_json"),
+                data.get("pickup_point_id"),
+                data.get("slot_id"),
+                data.get("zone_id"),
+                data.get("payment_status") or "pending",
+                int(data.get("subtotal_cents") or 0),
+                int(data.get("delivery_fee_cents") or 0),
+                int(data.get("discount_cents") or 0),
+                int(data.get("total_cents") or 0),
+                data.get("promo_code"),
+                data.get("idempotency_key") or f"stripe-recover-{reference}",
+                data.get("snapshot_json") or "[]",
+                data.get("created_at") or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                checkout.get("id"),
+            ),
+        )
+        order_id = cur.lastrowid
+        if data.get("distance_meters") is not None:
+            conn.execute(
+                "UPDATE orders SET distance_meters = ? WHERE id = ?",
+                (data.get("distance_meters"), order_id),
+            )
+        conn.execute(
+            "INSERT INTO order_events (order_id, status, created_at) VALUES (?, 'received', ?)",
+            (order_id, data.get("created_at") or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())),
+        )
+    except _integrity_error():
+        return conn.execute("SELECT * FROM orders WHERE public_ref = ?", (reference,)).fetchone()
+    return conn.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
 
 
 def _looks_like_key(key):
@@ -249,6 +399,7 @@ def begin_checkout(conn, order, base):
         ("line_items[0][price_data][unit_amount]", str(order["total_cents"])),
         ("line_items[0][price_data][product_data][name]", f"Commande {reference}"),
     ]
+    fields.extend(_pack_order_blob(order))
     suffix = stored or "new"
     session, error = _request(
         "POST",
@@ -376,8 +527,7 @@ def handle_webhook(conn, payload, signature):
     }:
         _remember(conn, event_id)
         return 200, {"ok": True, "ignored": True}
-    reference = (data.get("metadata") or {}).get("order_ref") or data.get("client_reference_id") or ""
-    order = conn.execute("SELECT * FROM orders WHERE public_ref = ?", (reference,)).fetchone() if reference else None
+    order = ensure_order_from_checkout(conn, data)
     if not order or order["payment_method"] != "stripe":
         _remember(conn, event_id)
         return 200, {"ok": True, "ignored": True}
@@ -432,7 +582,7 @@ def _remember(conn, event_id):
             "INSERT INTO stripe_events (id, created_at) VALUES (?, ?)",
             (event_id, time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())),
         )
-    except sqlite3.IntegrityError:
+    except _integrity_error():
         pass
 
 

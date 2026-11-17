@@ -58,7 +58,7 @@ export function Menu() {
 
   return (
     <div className="mx-auto w-full min-w-0 max-w-6xl px-4 py-8 lg:py-12">
-      <h1 className="motion-rise font-display text-5xl leading-none">La carte</h1>
+      <h1 className="motion-rise font-display text-[clamp(2.1rem,8vw,3.25rem)] leading-none">La carte</h1>
       <nav className="mt-6 flex flex-wrap gap-2" aria-label="Catégories">
         <Link className={chip(!category)} to={href("")} aria-current={!category ? "page" : undefined}>
           Tout
@@ -97,7 +97,7 @@ export function Menu() {
             aria-label="Rechercher un plat"
             onChange={(event) => setDraft(event.target.value)}
           />
-          <button className="inline-flex min-h-12 shrink-0 items-center border border-line px-4 text-sm" type="submit">
+          <button className="inline-flex min-h-12 shrink-0 items-center rounded-xl border border-line px-4 text-sm" type="submit">
             Chercher
           </button>
         </form>
@@ -128,7 +128,7 @@ export function Menu() {
 }
 
 function chip(active: boolean) {
-  return `inline-flex min-h-11 items-center gap-2 border px-4 text-sm transition-colors duration-300 ${active ? "border-ink bg-night text-cream" : "border-line bg-cream text-ink hover:border-ink"}`;
+  return `inline-flex min-h-11 items-center gap-2 rounded-xl border px-4 text-sm transition-colors duration-300 ${active ? "border-ink bg-night text-cream" : "border-line bg-cream text-ink hover:border-ink"}`;
 }
 
 function countClass(active: boolean) {

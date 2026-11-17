@@ -685,7 +685,7 @@ def _cookie_value(header, name):
     return ""
 
 
-def prepare(path):
+def prepare(path=None):
     conn = init_db(path)
     seed(conn)
     from app.orders import ensure_upcoming_slots
@@ -708,7 +708,8 @@ def main():
     from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
     db_path = os.environ.get("ALLOKO_DB", str(ROOT / "data" / "allokodrone.db"))
-    port = int(os.environ.get("ALLOKO_PORT", "8080"))
+    # Render/Railway exposent PORT ; ALLOKO_PORT reste pour le local
+    port = int(os.environ.get("PORT") or os.environ.get("ALLOKO_PORT", "8080"))
 
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self):

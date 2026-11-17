@@ -16,7 +16,13 @@ from app.orders import place_order
 from app.schedule import PARIS
 from app.seed import seed
 from app.server import handle_http
-from app.stripe_pay import begin_checkout, cancel_payment, handle_webhook, verify_return
+from app.stripe_pay import (
+    begin_checkout,
+    cancel_payment,
+    ensure_order_from_checkout,
+    handle_webhook,
+    verify_return,
+)
 import app.stripe_pay as stripe_pay
 
 TUESDAY_NOON = datetime(2026, 10, 20, 12, 30, tzinfo=PARIS)
@@ -58,6 +64,11 @@ class FakeStripe:
                 return Response(existing)
             self.creates += 1
             session_id = f"cs_test_{self.creates}"
+            metadata = {
+                key[len("metadata[") : -1]: value
+                for key, value in fields.items()
+                if key.startswith("metadata[") and key.endswith("]")
+            }
             session = {
                 "id": session_id,
                 "url": f"https://checkout.stripe.com/c/pay/{session_id}",
@@ -65,7 +76,7 @@ class FakeStripe:
                 "payment_status": "unpaid",
                 "amount_total": int(fields["line_items[0][price_data][unit_amount]"]),
                 "currency": fields["line_items[0][price_data][currency]"],
-                "metadata": {"order_ref": fields["metadata[order_ref]"]},
+                "metadata": metadata,
                 "client_reference_id": fields["client_reference_id"],
                 "payment_intent": f"pi_test_{self.creates}",
                 "idempotency": idem,
@@ -279,3 +290,43 @@ class StripeTests(unittest.TestCase):
         self.assertEqual(response.status, 200)
         row = self.conn.execute("SELECT payment_status FROM orders WHERE id = ?", (order["id"],)).fetchone()
         self.assertEqual(row["payment_status"], "paid")
+
+    def test_checkout_metadata_restores_missing_order(self):
+        order = self.order(key="pay-recover")
+        begin_checkout(self.conn, order, "http://127.0.0.1:8080")
+        order = self.conn.execute("SELECT * FROM orders WHERE id = ?", (order["id"],)).fetchone()
+        checkout = self.fake.sessions[order["stripe_session_id"]]
+        self.assertIn("obn", checkout["metadata"])
+        self.conn.execute("PRAGMA foreign_keys = OFF")
+        self.conn.execute("DELETE FROM order_events WHERE order_id = ?", (order["id"],))
+        self.conn.execute("DELETE FROM notifications WHERE order_id = ?", (order["id"],))
+        self.conn.execute("DELETE FROM orders WHERE id = ?", (order["id"],))
+        self.conn.execute("PRAGMA foreign_keys = ON")
+        self.assertIsNone(self.conn.execute("SELECT 1 FROM orders WHERE public_ref = ?", (order["public_ref"],)).fetchone())
+        restored = ensure_order_from_checkout(self.conn, checkout, claim_session_id="sid-new")
+        self.assertIsNotNone(restored)
+        self.assertEqual(restored["public_ref"], order["public_ref"])
+        self.assertEqual(restored["total_cents"], order["total_cents"])
+        self.assertEqual(restored["session_id"], "sid-new")
+        checkout["payment_status"] = "paid"
+        checkout["status"] = "complete"
+        payload = self.event(
+            restored,
+            "checkout.session.completed",
+            event_id="evt_recover",
+            metadata=checkout["metadata"],
+        )
+        self.conn.execute("PRAGMA foreign_keys = OFF")
+        self.conn.execute("DELETE FROM order_events")
+        self.conn.execute("DELETE FROM notifications")
+        self.conn.execute("DELETE FROM orders")
+        self.conn.execute("PRAGMA foreign_keys = ON")
+        status, body = handle_webhook(self.conn, payload, sign(payload))
+        self.assertEqual(status, 200)
+        self.assertTrue(body["ok"])
+        paid = self.conn.execute(
+            "SELECT payment_status, total_cents FROM orders WHERE public_ref = ?",
+            (order["public_ref"],),
+        ).fetchone()
+        self.assertEqual(paid["payment_status"], "paid")
+        self.assertEqual(paid["total_cents"], order["total_cents"])

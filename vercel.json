@@ -1,8 +1,19 @@
 {
+  "buildCommand": "npm run vercel-build",
+  "outputDirectory": "public",
+  "functions": {
+    "api/backend.py": {
+      "maxDuration": 30,
+      "memory": 1024,
+      "excludeFiles": "{web/node_modules,node_modules,web/src,web/dist,tests,.git,.tools,.publish,public}/**"
+    }
+  },
   "rewrites": [
-    { "source": "/admin", "destination": "https://example-abu-sas-army.trycloudflare.com/admin" },
-    { "source": "/admin/:path*", "destination": "https://example-abu-sas-army.trycloudflare.com/admin/:path*" },
-    { "source": "/api/:path*", "destination": "https://example-abu-sas-army.trycloudflare.com/api/:path*" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/admin", "destination": "/api/backend?__p=/admin" },
+    { "source": "/admin/", "destination": "/api/backend?__p=/admin" },
+    { "source": "/admin/:path*", "destination": "/api/backend?__p=/admin/:path*" },
+    { "source": "/api/:path*", "destination": "/api/backend?__p=/api/:path*" },
+    { "source": "/uploads/:path*", "destination": "/api/backend?__p=/uploads/:path*" },
+    { "source": "/((?!api/|admin/?|images/|css/|js/|videos/|fonts/|uploads/).*)", "destination": "/index.html" }
   ]
 }

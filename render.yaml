@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: allokodrone-api
+    runtime: python
+    plan: free
+    region: frankfurt
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python run.py"
+    healthCheckPath: /api/accueil
+    autoDeploy: true
+    envVars:
+      - key: ALLOKO_HOST
+        value: "0.0.0.0"
+      - key: ALLOKO_PUBLIC_URL
+        value: "https://allokodrone.vercel.app"
+      - key: ALLOKO_CORS_ORIGINS
+        value: "https://allokodrone.vercel.app,https://affouchatasylla.github.io,https://affouchataSylla.github.io,http://127.0.0.1:5173,http://localhost:5173,http://127.0.0.1:8080,http://localhost:8080"
+      - key: ALLOKO_ADMIN_EMAIL
+        sync: false
+      - key: ALLOKO_ADMIN_PASSWORD
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false

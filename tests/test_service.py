@@ -148,6 +148,18 @@ class ServiceBoardTests(unittest.TestCase):
         self.assertEqual(after[0]["used"], 0)
         self.assertEqual(after[0]["remaining"], 4)
 
+    def test_empty_database_gets_default_capacity_slots(self):
+        from app.orders import ensure_upcoming_slots, open_slots
+
+        empty = init_db(os.path.join(self.tmp.name, "empty.db"))
+        seed(empty)
+        created = ensure_upcoming_slots(empty, days=1, clock=TUESDAY_NOON)
+        self.assertGreater(created, 0)
+        self.assertGreater(len(open_slots(empty, clock=TUESDAY_NOON)), 0)
+        capacity = empty.execute("SELECT MIN(capacity) AS capacity FROM pickup_slots").fetchone()["capacity"]
+        self.assertEqual(capacity, 4)
+        empty.close()
+
     def test_missing_days_are_opened_from_published_hours(self):
         from app.orders import ensure_upcoming_slots
 

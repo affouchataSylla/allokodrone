@@ -148,7 +148,7 @@ export function Cart() {
                   Code promotionnel
                   <input className={`${input} mt-1`} value={code} autoComplete="off" onChange={(event) => setCode(event.target.value)} />
                 </label>
-                <button className="mt-6 inline-flex min-h-12 items-center border border-line px-3 text-sm" type="submit">Appliquer</button>
+                <button className="mt-6 inline-flex min-h-12 items-center rounded-xl border border-line px-3 text-sm" type="submit">Appliquer</button>
               </form>
               <Link className={`${btn} mt-5 w-full`} to="/commander">Continuer</Link>
             </div>

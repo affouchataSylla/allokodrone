@@ -2,13 +2,13 @@ import { useEffect, type ReactNode } from "react";
 import { Link } from "react-router";
 
 export const btn =
-  "inline-flex min-h-12 items-center justify-center bg-terracotta px-5 text-sm font-semibold tracking-wide text-cream transition-colors duration-300 hover:bg-terracotta-deep disabled:cursor-not-allowed disabled:opacity-40";
+  "inline-flex min-h-10 items-center justify-center rounded-xl border border-cream/80 bg-terracotta px-5 text-sm font-semibold tracking-wide text-cream transition-colors duration-300 hover:bg-terracotta-deep disabled:cursor-not-allowed disabled:opacity-40";
 export const btnGhost =
-  "inline-flex min-h-12 items-center justify-center border border-cream/40 px-5 text-sm font-medium text-cream transition-colors duration-300 hover:border-cream disabled:opacity-40";
+  "inline-flex min-h-10 items-center justify-center rounded-xl border border-cream/75 bg-transparent px-5 text-sm font-semibold tracking-wide text-cream transition-colors duration-300 hover:border-cream hover:bg-cream/5 disabled:opacity-40";
 export const btnLine =
-  "inline-flex min-h-12 items-center justify-center border border-ink/20 bg-cream px-5 text-sm font-medium text-ink transition-colors duration-300 hover:border-ink disabled:opacity-40";
+  "inline-flex min-h-10 items-center justify-center rounded-xl border border-ink/30 bg-cream px-5 text-sm font-semibold tracking-wide text-ink transition-colors duration-300 hover:border-ink disabled:opacity-40";
 export const input =
-  "min-h-12 w-full border border-line bg-cream px-3 text-base text-ink outline-none";
+  "min-h-12 w-full rounded-xl border border-line bg-cream px-3 text-base text-ink outline-none";
 export const field = "mt-4 flex flex-col gap-1.5 text-sm";
 
 export function useTitle(title: string) {
@@ -54,7 +54,7 @@ export function Quantity({
   disabled?: boolean;
 }) {
   return (
-    <div className="inline-flex items-center border border-line bg-cream">
+    <div className="inline-flex items-center overflow-hidden rounded-xl border border-line bg-cream">
       <button
         className="h-12 w-12 text-lg disabled:opacity-40"
         type="button"

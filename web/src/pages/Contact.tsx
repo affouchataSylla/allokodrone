@@ -1,7 +1,9 @@
 import { useEffect } from "react";
+import { Link } from "react-router";
 import { ContactMap } from "../components/contact/ContactMap";
 import { ContactSteps } from "../components/contact/ContactSteps";
 import { HoursTicket } from "../components/contact/HoursTicket";
+import { InstagramMark } from "../components/brand/Marks";
 import { useSession } from "../session";
 import { Pending, useTitle } from "../ui";
 
@@ -34,6 +36,7 @@ export function Contact() {
       <div className="contact-shell">
         <div className="contact-hero-grid">
           <div className="contact-copy">
+            <p className="contact-eyebrow">Contact</p>
             <h1 className="contact-kicker">Nous trouver</h1>
             <address className="contact-address">
               <span className="contact-street">{street}</span>
@@ -41,23 +44,32 @@ export function Contact() {
             </address>
             <p className="contact-lead">{deliveryLine}</p>
             <div className="contact-actions">
-              <a className="contact-btn" href={restaurant.maps}>
+              <a className="contact-btn" href={restaurant.maps} target="_blank" rel="noopener noreferrer">
                 Itinéraire
               </a>
-              <a
-                className="contact-ig"
-                href={restaurant.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Instagram
-              </a>
+              <span className="contact-actions-pair">
+                <a
+                  className="contact-ig"
+                  href={restaurant.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <InstagramMark className="h-4 w-4" />
+                  Instagram
+                </a>
+                <a className="contact-ig" href="#horaires">
+                  Horaires
+                </a>
+              </span>
             </div>
+            <Link className="contact-carte-link" to="/carte">
+              Voir la carte →
+            </Link>
+            <ContactMap />
           </div>
           <HoursTicket deliveryOpen={restaurant.deliveryOpen} />
         </div>
 
-        <ContactMap />
         <ContactSteps />
       </div>
     </article>

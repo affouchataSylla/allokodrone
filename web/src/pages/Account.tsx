@@ -1,7 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import { api, ApiError } from "../api";
-import { adminUrl } from "../base";
 import { useSession } from "../session";
 import type { User } from "../types";
 import { Alert, btn, btnLine, field, input, Pending, useTitle } from "../ui";
@@ -51,7 +50,7 @@ export function Account() {
       <div className="mx-auto max-w-3xl px-4 py-12">
         <h1 className="font-display text-5xl">Administration</h1>
         <p className="mt-4 text-sm text-ink-soft">Vous êtes connecté à l'espace restaurant.</p>
-        <a className={`${btn} mt-6`} href={adminUrl("/admin")}>Ouvrir l'administration</a>
+        <a className={`${btn} mt-6`} href="/admin/">Ouvrir l'administration</a>
       </div>
     );
   }

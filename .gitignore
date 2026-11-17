@@ -4,9 +4,6 @@ data/
 __pycache__/
 *.pyc
 .pytest_cache/
-.env
-.env.*
-!.env.example
 node_modules/
 web/node_modules/
 .vercel/
@@ -21,3 +18,11 @@ videos/From*.mp4
 videos/make-hero.ps1
 .vercel
 .env*
+
+.projects/cache
+.projects/vault
+.projects/state.test.json
+.projects/state.local.test.json
+.env
+.env.*
+!.env.example

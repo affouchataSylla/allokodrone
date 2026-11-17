@@ -30,30 +30,16 @@ export function Concept() {
     "https://www.google.com/maps/dir/?api=1&destination=24+rue+Emmanuel+Arago+93130+Noisy-le-Sec";
 
   return (
-    <article className="bg-paper text-ink">
+    <article className="min-w-0 overflow-x-clip bg-paper text-ink">
       <ConceptHero
         title="Le goût voyage autrement"
         lead="ALLOKODRONE, c'est une cuisine africaine faite maison, inspirée des repas de famille et des grandes occasions."
-        points={[
-          {
-            title: "Plats de caractère",
-            body: "Viandes braisées, marinades travaillées, sauces parfumées.",
-          },
-          {
-            title: "Ingrédients choisis",
-            body: "Des produits sélectionnés avec soin, préparés chaque jour.",
-          },
-          {
-            title: "Cuisine d'aujourd'hui",
-            body: "Authentique, actuelle, pensée pour le retrait et la livraison.",
-          },
-        ]}
         imageAlt="Bowl AlloKoDrone avec poulet effiloché, oignons caramélisés, riz et plantains frits"
       />
       <ValueGrid values={VALUES} />
       <QuoteBand>
-        Pour certains, un <span className="text-terracotta">souvenir familier</span>. Pour d'autres, une porte
-        d'entrée vers une <span className="text-terracotta">cuisine encore méconnue</span>. Une cuisine authentique
+        Pour certains, un <span className="text-terracotta">souvenir familier</span>. Pour d&apos;autres, une porte
+        d&apos;entrée vers une <span className="text-terracotta">cuisine encore méconnue</span>. Une cuisine authentique
         dans un <span className="text-terracotta">univers actuel</span>.
       </QuoteBand>
       <BrandCta

@@ -123,12 +123,13 @@ def open_slots(conn, clock=None):
     return available
 
 
+DEFAULT_SLOT_CAPACITY = 4
+
+
 def ensure_upcoming_slots(conn, days=14, clock=None):
     """Ouvre les créneaux manquants sur les horaires publiés. La capacité reprend le dernier créneau enregistré."""
     sample = conn.execute("SELECT capacity FROM pickup_slots ORDER BY id DESC LIMIT 1").fetchone()
-    if not sample or int(sample["capacity"]) < 1:
-        return 0
-    capacity = int(sample["capacity"])
+    capacity = int(sample["capacity"]) if sample and int(sample["capacity"]) > 0 else DEFAULT_SLOT_CAPACITY
     hours = load_json_setting(conn, "hours", DEFAULT_HOURS)
     moment = now_paris(clock)
     created = 0
