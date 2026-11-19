@@ -1469,11 +1469,15 @@ video {
 
 .promo-card--mobile-preview .promo-card__title {
   margin-top: 0.45rem;
-  font-size: 20px;
+  font-size: 18px;
+}
+
+.promo-card--mobile-preview .promo-card__price-prefix {
+  font-size: 2.1rem;
 }
 
 .promo-card--mobile-preview .promo-card__price {
-  font-size: 2.9rem;
+  font-size: 2.5rem;
 }
 
 .promo-card--mobile-preview .promo-card__description,
@@ -1789,11 +1793,11 @@ video {
 
   .promo-card__title {
     margin-top: 0.45rem;
-    font-size: 20px;
+    font-size: 18px;
   }
 
   .promo-card__price-prefix {
-    font-size: 2.5rem;
+    font-size: 2.1rem;
   }
 
   .promo-card__price-row {
@@ -1801,7 +1805,7 @@ video {
   }
 
   .promo-card__price {
-    font-size: 2.9rem;
+    font-size: 2.5rem;
   }
 
   .promo-card__description,
@@ -2007,11 +2011,11 @@ video {
 }
 
 .promo-card--mobile-preview.promo-card--premium .promo-card__price {
-  font-size: 4.75rem;
+  font-size: 3.5rem;
 }
 
 .promo-card--mobile-preview.promo-card--premium .promo-card__title {
-  font-size: 20px;
+  font-size: 18px;
 }
 
 @media (max-width: 640px) {
@@ -2041,11 +2045,11 @@ video {
   }
 
   .promo-card--premium .promo-card__price {
-    font-size: 4.75rem;
+    font-size: 3.5rem;
   }
 
   .promo-card--premium .promo-card__title {
-    font-size: 20px;
+    font-size: 18px;
   }
 
   .promo-card--premium .promo-card__description,
