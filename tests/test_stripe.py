@@ -21,6 +21,7 @@ from app.stripe_pay import (
     cancel_payment,
     ensure_order_from_checkout,
     handle_webhook,
+    public_base,
     verify_return,
 )
 import app.stripe_pay as stripe_pay
@@ -145,6 +146,41 @@ class StripeTests(unittest.TestCase):
         order, errors = place_order(self.conn, self.sid, None, self.form(key, **extra), clock=TUESDAY_NOON)
         self.assertEqual(errors, [])
         return order
+
+    def test_local_payment_return_ignores_a_configured_github_pages_url(self):
+        previous = os.environ.get("ALLOKO_PUBLIC_URL")
+        try:
+            os.environ["ALLOKO_PUBLIC_URL"] = "https://affouchatasylla.github.io/allokodrone"
+            self.assertEqual(
+                public_base({"host": "127.0.0.1:8080"}),
+                "http://127.0.0.1:8080",
+            )
+            self.assertEqual(
+                public_base({"host": "localhost:8080"}),
+                "http://localhost:8080",
+            )
+            order = self.order("local-return")
+            _url, error = begin_checkout(
+                self.conn,
+                order,
+                public_base({"host": "127.0.0.1:8080"}),
+            )
+            self.assertIsNone(error)
+            self.assertTrue(
+                self.fake.last_fields["success_url"].startswith(
+                    "http://127.0.0.1:8080/paiement/succes?ref="
+                )
+            )
+            self.assertTrue(
+                self.fake.last_fields["cancel_url"].startswith(
+                    "http://127.0.0.1:8080/paiement/echec?ref="
+                )
+            )
+        finally:
+            if previous is None:
+                os.environ.pop("ALLOKO_PUBLIC_URL", None)
+            else:
+                os.environ["ALLOKO_PUBLIC_URL"] = previous
 
     def event(self, order, kind, **fields):
         data = {

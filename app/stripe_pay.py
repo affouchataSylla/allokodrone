@@ -238,14 +238,19 @@ def stripe_ready(conn=None):
 
 
 def public_base(headers):
-    configured = os.environ.get("ALLOKO_PUBLIC_URL", "").strip().rstrip("/")
-    if configured.startswith("https://") or configured.startswith("http://"):
-        return configured
-    host = (headers or {}).get("host") or "127.0.0.1:8080"
+    headers = headers or {}
+    request_host = headers.get("host")
+    host = request_host or "127.0.0.1:8080"
     allowed = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-:")
     if not host or ".." in host or len(host) > 200 or any(char not in allowed for char in host):
         host = "127.0.0.1:8080"
-    proto = "https" if (headers or {}).get("x-forwarded-proto") == "https" else "http"
+        request_host = None
+    hostname = host.rsplit(":", 1)[0].strip("[]").lower()
+    local_request = request_host is not None and hostname in {"localhost", "127.0.0.1", "::1"}
+    configured = os.environ.get("ALLOKO_PUBLIC_URL", "").strip().rstrip("/")
+    if not local_request and (configured.startswith("https://") or configured.startswith("http://")):
+        return configured
+    proto = "https" if headers.get("x-forwarded-proto") == "https" else "http"
     return f"{proto}://{host}"
 
 
