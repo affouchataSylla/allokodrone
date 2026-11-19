@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from urllib.parse import urlsplit
 
+from app.auth import iso, utc_now
+
 
 MAX_IMAGE_BYTES = 2 * 1024 * 1024
 FREQUENCIES = {"session", "day", "visit"}
@@ -208,8 +210,30 @@ def _stats(conn, promo_id):
         "SELECT impressions, clicks, closes FROM promotion_popup_stats WHERE promo_id = ?",
         (promo_id,),
     ).fetchone()
+    clickers = conn.execute(
+        """
+        SELECT
+          COUNT(DISTINCT e.session_id) AS unique_clickers,
+          COUNT(DISTINCT CASE
+            WHEN e.occurred_at IS NOT NULL AND EXISTS (
+              SELECT 1 FROM orders o
+              WHERE o.session_id = e.session_id AND o.created_at >= e.occurred_at
+            ) THEN e.session_id
+          END) AS orders_after_click
+        FROM promotion_popup_events e
+        WHERE e.promo_id = ? AND e.event = 'click'
+        """,
+        (promo_id,),
+    ).fetchone()
     if not row:
-        return {"impressions": 0, "clicks": 0, "closes": 0, "click_rate": 0}
+        return {
+            "impressions": 0,
+            "clicks": 0,
+            "closes": 0,
+            "click_rate": 0,
+            "unique_clickers": int(clickers["unique_clickers"]),
+            "orders_after_click": int(clickers["orders_after_click"]),
+        }
     impressions = int(row["impressions"])
     clicks = int(row["clicks"])
     return {
@@ -217,6 +241,8 @@ def _stats(conn, promo_id):
         "clicks": clicks,
         "closes": int(row["closes"]),
         "click_rate": round(clicks * 100 / impressions, 1) if impressions else 0,
+        "unique_clickers": int(clickers["unique_clickers"]),
+        "orders_after_click": int(clickers["orders_after_click"]),
     }
 
 
@@ -396,19 +422,64 @@ def image_by_id(conn, image_id):
 def record_event(conn, promo_id, session_id, event):
     if event not in {"impression", "click", "close"} or not session_id:
         return False
+    occurred_at = iso(utc_now())
+    event_day = _now().date().isoformat()
     cursor = conn.execute(
-        "INSERT OR IGNORE INTO promotion_popup_events (promo_id, session_id, event, event_day) "
-        "SELECT id, ?, ?, ? FROM promotions WHERE id = ?",
-        (str(session_id), event, _now().date().isoformat(), promo_id),
+        "INSERT OR IGNORE INTO promotion_popup_events "
+        "(promo_id, session_id, event, event_day, occurred_at) "
+        "SELECT id, ?, ?, ?, ? FROM promotions WHERE id = ?",
+        (str(session_id), event, event_day, occurred_at, promo_id),
     )
-    if cursor.rowcount:
+    recorded = bool(cursor.rowcount)
+    if recorded:
         column = {"impression": "impressions", "click": "clicks", "close": "closes"}[event]
         conn.execute(
             f"INSERT INTO promotion_popup_stats (promo_id, {column}) VALUES (?, 1) "
             f"ON CONFLICT(promo_id) DO UPDATE SET {column} = {column} + 1",
             (promo_id,),
         )
-    return bool(cursor.rowcount)
+    else:
+        conn.execute(
+            """
+            UPDATE promotion_popup_events
+            SET occurred_at = COALESCE(occurred_at, ?)
+            WHERE promo_id = ? AND session_id = ? AND event = ? AND event_day = ?
+            """,
+            (occurred_at, promo_id, str(session_id), event, event_day),
+        )
+    return recorded
+
+
+def promotion_clickers(conn, promo_id):
+    if not conn.execute("SELECT 1 FROM promotions WHERE id = ?", (promo_id,)).fetchone():
+        return None
+    rows = conn.execute(
+        """
+        SELECT e.session_id,
+               MIN(e.occurred_at) AS clicked_at,
+               MIN(e.event_day) AS event_day,
+               COUNT(DISTINCT o.id) AS order_count
+        FROM promotion_popup_events e
+        LEFT JOIN orders o
+          ON e.occurred_at IS NOT NULL
+         AND o.session_id = e.session_id
+         AND o.created_at >= e.occurred_at
+        WHERE e.promo_id = ? AND e.event = 'click'
+        GROUP BY e.session_id
+        ORDER BY COALESCE(MIN(e.occurred_at), MIN(e.event_day)) DESC, e.session_id
+        """,
+        (promo_id,),
+    ).fetchall()
+    return [
+        {
+            "visitor": f"Visiteur {index}",
+            "clicked_at": row["clicked_at"],
+            "event_day": row["event_day"],
+            "has_order": None if row["clicked_at"] is None else bool(row["order_count"]),
+            "order_count": int(row["order_count"]),
+        }
+        for index, row in enumerate(rows, start=1)
+    ]
 
 
 def seed_demo_promotion(conn, *, active=False):

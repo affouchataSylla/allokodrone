@@ -100,6 +100,7 @@ def dispatch_api(ctx, method, path, query, payload):
             delete_promotion,
             duplicate_promotion,
             list_promotions,
+            promotion_clickers,
             save_promotion,
             store_image,
             toggle_promotion,
@@ -133,6 +134,11 @@ def dispatch_api(ctx, method, path, query, payload):
         if len(parts) == 6 and parts[4].isdigit():
             promo_id = int(parts[4])
             action = parts[5]
+            if method == "GET" and action == "clickers":
+                clickers = promotion_clickers(ctx.conn, promo_id)
+                if clickers is None:
+                    return json_response({"error": "Promotion introuvable."}, 404)
+                return json_response({"clickers": clickers})
             if method == "POST" and action == "toggle":
                 promo = toggle_promotion(ctx.conn, promo_id, payload.get("actif"))
                 return json_response({"promotion": promo}, 200 if promo else 404)

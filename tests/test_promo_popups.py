@@ -3,7 +3,7 @@ import os
 import sqlite3
 import tempfile
 import unittest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -14,6 +14,7 @@ from app.promo_popups import (
     get_active_promotion,
     get_promotion,
     duplicate_promotion,
+    promotion_clickers,
     record_event,
     save_promotion,
     seed_demo_promotion,
@@ -216,6 +217,116 @@ class PromotionPopupTests(unittest.TestCase):
         self.assertTrue(record_event(self.conn, promo["id"], "session-a", "impression"))
         self.assertFalse(record_event(self.conn, promo["id"], "session-a", "impression"))
         self.assertEqual(get_promotion(self.conn, promo["id"])["impressions"], 1)
+
+    def test_clickers_are_anonymous_and_orders_are_attributed_after_the_click(self):
+        promo, error = save_promotion(self.conn, self.payload())
+        self.assertIsNone(error)
+        click_time = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
+        with patch("app.promo_popups.utc_now", return_value=click_time):
+            self.assertTrue(record_event(self.conn, promo["id"], "session-after", "click"))
+        with patch(
+            "app.promo_popups.utc_now",
+            return_value=click_time + timedelta(hours=2),
+        ):
+            self.assertTrue(record_event(self.conn, promo["id"], "session-before", "click"))
+
+        self.conn.execute(
+            """
+            INSERT INTO orders (
+              public_ref, session_id, status, mode, customer_name, email, phone,
+              payment_method, subtotal_cents, delivery_fee_cents, discount_cents,
+              total_cents, idempotency_key, snapshot_json, created_at
+            ) VALUES (?, ?, 'received', 'delivery', 'Test', 'test@example.com', '000',
+                      'cash', 1000, 0, 0, 1000, ?, '{}', ?)
+            """,
+            (
+                "ORDER-AFTER",
+                "session-after",
+                "key-after",
+                (click_time + timedelta(minutes=5)).isoformat(),
+            ),
+        )
+        self.conn.execute(
+            """
+            INSERT INTO orders (
+              public_ref, session_id, status, mode, customer_name, email, phone,
+              payment_method, subtotal_cents, delivery_fee_cents, discount_cents,
+              total_cents, idempotency_key, snapshot_json, created_at
+            ) VALUES (?, ?, 'received', 'delivery', 'Test', 'test@example.com', '000',
+                      'cash', 1000, 0, 0, 1000, ?, '{}', ?)
+            """,
+            (
+                "ORDER-BEFORE",
+                "session-before",
+                "key-before",
+                (click_time + timedelta(hours=1)).isoformat(),
+            ),
+        )
+
+        clickers = promotion_clickers(self.conn, promo["id"])
+        by_order = {clicker["has_order"]: clicker for clicker in clickers}
+        self.assertEqual(len(clickers), 2)
+        self.assertEqual(by_order[True]["order_count"], 1)
+        self.assertEqual(by_order[False]["order_count"], 0)
+        self.assertNotIn("session-", by_order[True]["visitor"])
+
+        stats = get_promotion(self.conn, promo["id"])
+        self.assertEqual(stats["unique_clickers"], 2)
+        self.assertEqual(stats["orders_after_click"], 1)
+
+        response = dispatch_api(
+            SimpleNamespace(
+                conn=self.conn,
+                session={"id": "admin-session"},
+                user={"id": 1, "role": "admin"},
+            ),
+            "GET",
+            f"/api/admin/promotions/{promo['id']}/clickers",
+            {},
+            {},
+        )
+        self.assertEqual(response.status, 200)
+        response_body = response.body.decode("utf-8")
+        api_clickers = json.loads(response_body)["clickers"]
+        self.assertNotIn("session-after", response_body)
+        self.assertEqual(len(api_clickers), 2)
+
+    def test_clicks_without_a_recorded_timestamp_are_not_misattributed(self):
+        promo, error = save_promotion(self.conn, self.payload())
+        self.assertIsNone(error)
+        self.conn.execute(
+            """
+            INSERT INTO promotion_popup_events (promo_id, session_id, event, event_day)
+            VALUES (?, 'legacy-session', 'click', '2025-01-01')
+            """,
+            (promo["id"],),
+        )
+
+        clicker = promotion_clickers(self.conn, promo["id"])[0]
+        self.assertIsNone(clicker["has_order"])
+
+    def test_init_db_adds_click_timestamps_to_existing_event_tables(self):
+        legacy_path = os.path.join(self.tmp.name, "legacy-promotions.db")
+        legacy = sqlite3.connect(legacy_path)
+        legacy.execute(
+            """
+            CREATE TABLE promotion_popup_events (
+              promo_id INTEGER NOT NULL,
+              session_id TEXT NOT NULL,
+              event TEXT NOT NULL,
+              event_day TEXT NOT NULL,
+              PRIMARY KEY (promo_id, session_id, event, event_day)
+            )
+            """
+        )
+        legacy.close()
+
+        migrated = init_db(legacy_path)
+        try:
+            columns = {row[1] for row in migrated.execute("PRAGMA table_info(promotion_popup_events)")}
+            self.assertIn("occurred_at", columns)
+        finally:
+            migrated.close()
 
     def test_custom_colors_must_keep_accessible_contrast(self):
         data = self.payload()

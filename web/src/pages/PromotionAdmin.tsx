@@ -20,6 +20,16 @@ type AdminPromotion = PopupPromotion & {
   clicks: number;
   closes: number;
   click_rate: number;
+  unique_clickers: number;
+  orders_after_click: number;
+};
+
+type PromotionClicker = {
+  visitor: string;
+  clicked_at: string | null;
+  event_day: string;
+  has_order: boolean | null;
+  order_count: number;
 };
 
 type PromotionDraft = {
@@ -56,6 +66,14 @@ const TARGETS = [
 function localDateTime(date: Date) {
   const offset = date.getTimezoneOffset() * 60000;
   return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+}
+
+function clickDate(clicker: PromotionClicker) {
+  if (!clicker.clicked_at) return `Date précise non enregistrée (${clicker.event_day})`;
+  const date = new Date(clicker.clicked_at);
+  return Number.isNaN(date.getTime())
+    ? clicker.clicked_at
+    : date.toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" });
 }
 
 function createDraft(): PromotionDraft {
@@ -190,6 +208,9 @@ export function PromotionAdmin() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [expandedClickersId, setExpandedClickersId] = useState<number | null>(null);
+  const [clickersByPromotion, setClickersByPromotion] = useState<Record<number, PromotionClicker[]>>({});
+  const [loadingClickersId, setLoadingClickersId] = useState<number | null>(null);
 
   const isAdmin = session?.user?.role === "admin";
   const selected = promotions.find((promo) => promo.id === selectedId) ?? null;
@@ -325,6 +346,28 @@ export function PromotionAdmin() {
     }
   }
 
+  async function toggleClickers(promoId: number) {
+    if (expandedClickersId === promoId) {
+      setExpandedClickersId(null);
+      return;
+    }
+    setExpandedClickersId(promoId);
+    if (clickersByPromotion[promoId]) return;
+
+    setLoadingClickersId(promoId);
+    setError("");
+    try {
+      const result = await api<{ clickers: PromotionClicker[] }>(
+        `/api/admin/promotions/${promoId}/clickers`,
+      );
+      setClickersByPromotion((current) => ({ ...current, [promoId]: result.clickers }));
+    } catch (reason) {
+      setError(errorText(reason));
+    } finally {
+      setLoadingClickersId(null);
+    }
+  }
+
   async function uploadImage(event: ChangeEvent<HTMLInputElement>) {
     const file = event.currentTarget.files?.[0];
     event.currentTarget.value = "";
@@ -441,6 +484,43 @@ export function PromotionAdmin() {
                     Affichages {promo.impressions} · Clics {promo.clicks} · Fermetures {promo.closes}
                     <span className="ml-1 font-semibold">· CTR {promo.click_rate}%</span>
                   </div>
+                  <div className="mt-1 text-xs">
+                    Visiteurs ayant cliqué {promo.unique_clickers} · Commandes après clic {promo.orders_after_click}
+                  </div>
+                  <button
+                    className="promo-admin__button mt-2"
+                    type="button"
+                    disabled={loadingClickersId === promo.id}
+                    onClick={() => void toggleClickers(promo.id)}
+                    aria-expanded={expandedClickersId === promo.id}
+                  >
+                    {expandedClickersId === promo.id ? "Masquer les clics" : "Voir les clics"}
+                  </button>
+                  {expandedClickersId === promo.id ? (
+                    <div className="mt-2 border-t pt-2 text-xs">
+                      <p className="mb-2">
+                        Visiteurs anonymisés. Une commande est associée si elle a été créée après le clic dans la même session.
+                      </p>
+                      {loadingClickersId === promo.id ? <p>Chargement des clics…</p> : null}
+                      {!loadingClickersId && clickersByPromotion[promo.id]?.length === 0 ? (
+                        <p>Aucun clic enregistré.</p>
+                      ) : null}
+                      <ul className="space-y-1">
+                        {clickersByPromotion[promo.id]?.map((clicker) => (
+                          <li key={clicker.visitor}>
+                            <span className="font-semibold">{clicker.visitor}</span>
+                            {" · "}{clickDate(clicker)}
+                            {" · "}
+                            {clicker.has_order === null
+                              ? "Historique antérieur, commande non attribuable"
+                              : clicker.has_order
+                                ? `Commande passée (${clicker.order_count})`
+                                : "Aucune commande après le clic"}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
                   <div className="promo-admin__actions mt-2">
                     <button className="promo-admin__button" type="button" disabled={busy} onClick={() => void toggle(promo)}>
                       {promo.actif ? "Désactiver" : "Activer"}

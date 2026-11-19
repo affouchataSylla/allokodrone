@@ -198,8 +198,12 @@ CREATE TABLE IF NOT EXISTS promotion_popup_events (
   session_id TEXT NOT NULL,
   event TEXT NOT NULL CHECK(event IN ('impression', 'click', 'close')),
   event_day TEXT NOT NULL,
+  occurred_at TEXT,
   PRIMARY KEY (promo_id, session_id, event, event_day)
 );
+
+CREATE INDEX IF NOT EXISTS idx_promotion_popup_clicks
+  ON promotion_popup_events (promo_id, event, session_id);
 
 CREATE TABLE IF NOT EXISTS promotion_popup_images (
   id TEXT PRIMARY KEY,
@@ -253,6 +257,7 @@ CREATE TABLE IF NOT EXISTS order_events (
 
 CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_orders_slot ON orders(slot_id);
+CREATE INDEX IF NOT EXISTS idx_orders_session_created ON orders(session_id, created_at);
 
 CREATE TABLE IF NOT EXISTS kitchen_lines (
   order_id INTEGER NOT NULL REFERENCES orders(id),
@@ -347,6 +352,9 @@ def init_db(path=None):
     conn = connect(path)
     _migrate_promo_codes(conn)
     conn.executescript(SCHEMA)
+    event_columns = {row[1] for row in conn.execute("PRAGMA table_info(promotion_popup_events)")}
+    if "occurred_at" not in event_columns:
+        conn.execute("ALTER TABLE promotion_popup_events ADD COLUMN occurred_at TEXT")
     promotion_columns = {row[1] for row in conn.execute("PRAGMA table_info(promotions)")}
     if "theme" not in promotion_columns:
         conn.execute("ALTER TABLE promotions ADD COLUMN theme TEXT NOT NULL DEFAULT 'beige'")
