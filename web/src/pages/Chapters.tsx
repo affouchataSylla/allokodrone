@@ -34,12 +34,12 @@ export function Signature() {
   }, []);
 
   return (
-    <article className="mx-auto max-w-6xl px-4 py-10">
+    <article className="mx-auto max-w-6xl px-4 py-7">
       <p className="text-xs uppercase tracking-[0.16em] text-terracotta">Notre signature</p>
       <h1 className="mt-3 font-display text-5xl leading-none">Des recettes qui font <span className="italic text-terracotta">voyager</span></h1>
       <Alert errors={errors} />
       {!products && !errors.length ? <Pending /> : null}
-      <ul className="mt-10 grid grid-cols-1 gap-4 min-[460px]:grid-cols-2 lg:grid-cols-3">
+      <ul className="mt-7 grid grid-cols-1 gap-4 min-[460px]:grid-cols-2 lg:grid-cols-3">
         {(products ?? []).map((product) => (
           <li key={product.slug} className="min-w-0">
             <DishCard product={product} badge={false} />
@@ -372,7 +372,7 @@ export function Avis() {
 
   return (
     <article className="bg-paper-2">
-    <div className="mx-auto max-w-6xl px-4 py-10 lg:py-14">
+    <div className="mx-auto max-w-6xl px-4 py-7 lg:py-10">
       <p className="text-xs font-medium uppercase tracking-[0.18em] text-terracotta">Avis</p>
       <div className="mt-3 flex flex-wrap items-end justify-between gap-6">
         <div className="max-w-2xl">
@@ -391,7 +391,7 @@ export function Avis() {
 
       <Alert errors={errors} />
 
-      <div className="mt-10 grid items-start gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+      <div className="mt-7 grid items-start gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <figure className="rounded-xl border border-line bg-cream px-6 py-8 sm:px-8">
           <p className="text-xs uppercase tracking-[0.16em] text-terracotta">{review.source}</p>
           <blockquote className="mt-4 border-l-2 border-terracotta pl-5">
@@ -428,7 +428,7 @@ export function Avis() {
         </section>
       </div>
 
-      <div className="mt-12 grid items-start gap-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+      <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
         <section className="scroll-mt-24 rounded-xl border border-line bg-cream px-5 py-5 sm:px-6" id="laisser-un-avis">
           <h2 className="font-display text-2xl leading-none text-ink sm:text-3xl">Laisser un avis</h2>
           {eligible && !eligible.canReview ? (
@@ -646,7 +646,7 @@ export function Avis() {
         </form>
       ) : null}
 
-      <section className="mt-12 scroll-mt-24 border-t border-line pt-10" aria-labelledby="faq-titre">
+      <section className="mt-8 scroll-mt-24 border-t border-line pt-7" aria-labelledby="faq-titre">
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-terracotta">FAQ</p>
         <h2 id="faq-titre" className="mt-2 font-display text-3xl leading-none text-ink">Questions fréquentes</h2>
         <div className="mt-5 grid gap-3 md:grid-cols-2">
@@ -688,10 +688,10 @@ export function Guide() {
   const restaurant = session?.restaurant;
 
   return (
-    <article className="mx-auto max-w-6xl px-4 py-10">
+    <article className="mx-auto max-w-6xl px-4 py-7">
       <p className="text-xs uppercase tracking-[0.16em] text-terracotta">Commander</p>
       <h1 className="mt-3 font-display text-5xl leading-none">Trois étapes</h1>
-      <div className="mt-10 grid gap-8 md:grid-cols-3">
+      <div className="mt-7 grid gap-6 md:grid-cols-3">
         {steps.map(([number, title, text]) => (
           <section key={number}>
             <p className="font-display text-4xl text-terracotta">{number}</p>
@@ -700,8 +700,8 @@ export function Guide() {
           </section>
         ))}
       </div>
-      {restaurant ? <p className="mt-10 text-sm text-ink-soft">{restaurant.offer}</p> : null}
-      <Link className={`${btn} mt-8`} to="/carte">Voir la carte</Link>
+      {restaurant ? <p className="mt-7 text-sm text-ink-soft">{restaurant.offer}</p> : null}
+      <Link className={`${btn} mt-6`} to="/carte">Voir la carte</Link>
     </article>
   );
 }

@@ -352,7 +352,7 @@ def add_promo(conn, form):
         return "Valeur de promotion invalide."
     conn.execute(
         """
-        INSERT INTO promotions (code, label, kind, amount_cents, percent, active)
+        INSERT INTO promo_codes (code, label, kind, amount_cents, percent, active)
         VALUES (?, ?, ?, ?, ?, 1)
         """,
         (code, label, kind, amount, percent),

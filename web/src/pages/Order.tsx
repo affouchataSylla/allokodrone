@@ -31,16 +31,16 @@ export function Order() {
 
   if (missing) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-12">
+      <div className="mx-auto max-w-3xl px-4 py-8">
         <h1 className="font-display text-4xl">Commande introuvable</h1>
         <Link className={`${btn} mt-6`} to="/compte">Voir le compte</Link>
       </div>
     );
   }
-  if (!order) return <div className="mx-auto max-w-3xl px-4">{error ? <p className="py-10 text-sm" role="alert">{error}</p> : <Pending />}</div>;
+  if (!order) return <div className="mx-auto max-w-3xl px-4">{error ? <p className="py-7 text-sm" role="alert">{error}</p> : <Pending />}</div>;
 
   return (
-    <article className="mx-auto max-w-3xl px-4 py-10">
+    <article className="mx-auto max-w-3xl px-4 py-7">
       <p className="text-xs uppercase tracking-[0.16em] text-terracotta">Confirmation</p>
       <h1 className="mt-3 font-display text-5xl leading-none">Commande {order.ref}</h1>
       <p className="mt-5 border-l-2 border-saffron bg-paper-2 px-4 py-3 text-sm">
@@ -84,14 +84,14 @@ export function Order() {
           </li>
         ))}
       </ul>
-      <h2 className="mt-8 font-display text-2xl">Récapitulatif</h2>
+      <h2 className="mt-6 font-display text-2xl">Récapitulatif</h2>
       <dl className="mt-3 border-y border-line text-sm">
         <div className="flex justify-between py-2"><dt>Sous-total</dt><dd>{order.subtotalLabel}</dd></div>
         <div className="flex justify-between py-2"><dt>Livraison</dt><dd>{order.deliveryLabel}</dd></div>
         <div className="flex justify-between py-2"><dt>Réduction</dt><dd>{order.discountLabel}</dd></div>
         <div className="flex justify-between py-3 font-medium"><dt>Total</dt><dd>{order.totalLabel}</dd></div>
       </dl>
-      <section className="mt-8 border border-line bg-cream p-5" aria-label="Suivi">
+      <section className="mt-6 border border-line bg-cream p-5" aria-label="Suivi">
         <div className="flex items-center justify-between gap-3">
           <h2 className="font-display text-2xl">Suivi</h2>
           <span className="shrink-0 bg-terracotta px-2 py-1 text-xs font-medium uppercase tracking-[0.12em] text-cream">{order.statusLabel}</span>
@@ -99,17 +99,17 @@ export function Order() {
         <TrackSteps events={order.events} />
       </section>
       {order.canReview ? (
-        <section className="mt-8 border border-line bg-cream p-5" aria-label="Avis">
+        <section className="mt-6 border border-line bg-cream p-5" aria-label="Avis">
           <Link className={btn} to={`/avis?commande=${encodeURIComponent(order.ref)}#laisser-un-avis`}>
             Laisser un avis
           </Link>
         </section>
       ) : order.reviewId ? (
-        <p className="mt-8 text-sm text-ink-soft">
+        <p className="mt-6 text-sm text-ink-soft">
           <Link className="underline decoration-line underline-offset-4 hover:decoration-terracotta" to="/avis">Voir les avis</Link>
         </p>
       ) : null}
-      <div className="mt-8 flex flex-wrap gap-3">
+      <div className="mt-6 flex flex-wrap gap-3">
         <a className={btnLine} href={`/api/commande/${encodeURIComponent(order.ref)}/pdf`}>Télécharger le PDF</a>
         <Link className={btn} to="/carte">Commander autre chose</Link>
       </div>

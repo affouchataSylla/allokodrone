@@ -42,6 +42,16 @@ REVIEW = {
     "author": "Sarah",
     "place": "Noisy-le-Sec",
     "source": "Google",
+    "reviews": [
+        {
+            "quote": "Une vraie découverte ! Les saveurs sont au rendez-vous, le pulled beef yassa est incroyable et l'accueil est top.",
+            "author": "Sarah",
+        },
+        {
+            "quote": "Impecable",
+            "author": "Ibrahim",
+        },
+    ],
 }
 
 
@@ -56,6 +66,81 @@ def dispatch_api(ctx, method, path, query, payload):
     if not path.startswith("/api/"):
         return None
     payload = payload or {}
+    if path == "/api/promotions/active" and method == "GET":
+        from app.promo_popups import get_active_promotion
+
+        page = (query.get("page") or [""])[0]
+        return json_response({"promotion": get_active_promotion(ctx.conn, page)})
+    if path.startswith("/api/promotions/images/") and method == "GET":
+        from app.promo_popups import image_by_id
+        from app.server import Response
+
+        image_id = path.rsplit("/", 1)[-1]
+        image = image_by_id(ctx.conn, image_id)
+        if not image:
+            return Response(404, "Image introuvable.")
+        return Response(
+            200,
+            image["data"],
+            headers=[("Cache-Control", "public, max-age=86400")],
+            content_type=image["mime_type"],
+        )
+    if path == "/api/promotions/event" and method == "POST":
+        from app.promo_popups import record_event
+
+        try:
+            promo_id = int(payload.get("id") or 0)
+        except (TypeError, ValueError):
+            return json_response({"error": "Promotion invalide."}, 400)
+        if not record_event(ctx.conn, promo_id, ctx.session["id"] if ctx.session else "", payload.get("event")):
+            return json_response({"ok": True})
+        return json_response({"ok": True})
+    if path.startswith("/api/admin/promotions"):
+        from app.promo_popups import (
+            delete_promotion,
+            duplicate_promotion,
+            list_promotions,
+            save_promotion,
+            store_image,
+            toggle_promotion,
+        )
+
+        if not ctx.user or ctx.user["role"] != "admin":
+            return json_response({"error": "Accès réservé aux administrateurs."}, 403)
+        if path == "/api/admin/promotions" and method == "GET":
+            return json_response({"promotions": list_promotions(ctx.conn)})
+        if path == "/api/admin/promotions" and method == "POST":
+            promo, error = save_promotion(ctx.conn, payload)
+            if error:
+                return json_response({"error": error}, 400)
+            return json_response({"promotion": promo}, 201)
+        if path == "/api/admin/promotions/upload" and method == "POST":
+            upload = payload.get("_upload") or {}
+            if payload.get("_upload_error"):
+                return json_response({"error": payload["_upload_error"]}, 400)
+            image, error = store_image(ctx.conn, upload.get("data"), upload.get("mime_type"))
+            if error:
+                return json_response({"error": error}, 400)
+            return json_response(image, 201)
+        parts = path.split("/")
+        if len(parts) == 5 and parts[4].isdigit():
+            promo_id = int(parts[4])
+            if method == "POST" and len(parts) == 5:
+                promo, error = save_promotion(ctx.conn, payload, promo_id)
+                if error:
+                    return json_response({"error": error}, 404 if error == "Promotion introuvable." else 400)
+                return json_response({"promotion": promo})
+        if len(parts) == 6 and parts[4].isdigit():
+            promo_id = int(parts[4])
+            action = parts[5]
+            if method == "POST" and action == "toggle":
+                promo = toggle_promotion(ctx.conn, promo_id, payload.get("actif"))
+                return json_response({"promotion": promo}, 200 if promo else 404)
+            if method == "POST" and action == "duplicate":
+                promo = duplicate_promotion(ctx.conn, promo_id)
+                return json_response({"promotion": promo}, 201 if promo else 404)
+            if method == "POST" and action == "delete":
+                return json_response({"ok": delete_promotion(ctx.conn, promo_id)}, 200)
     if path == "/api/session" and method == "GET":
         return json_response(_session(ctx))
     if path == "/api/avis" and method == "GET":

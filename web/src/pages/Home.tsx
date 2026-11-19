@@ -43,6 +43,14 @@ export function Home() {
   const lead = featured.find((item) => item.image) ?? featured[0];
   const categories = data?.categories ?? [];
   const restaurant = data?.restaurant;
+  const googleReviews = restaurant
+    ? restaurant.review.reviews.length
+      ? restaurant.review.reviews
+      : [{ author: restaurant.review.author, quote: restaurant.review.quote }]
+    : [];
+  const googleReviewUrl = restaurant
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${restaurant.name} ${restaurant.address}`)}`
+    : null;
 
   return (
     <>
@@ -101,14 +109,14 @@ export function Home() {
       </div>
 
       <section id="signatures" className="scroll-mt-24 overflow-x-clip bg-paper text-ink">
-        <Reveal className="mx-auto max-w-6xl px-4 py-10 lg:py-14">
+        <Reveal className="mx-auto max-w-6xl px-4 py-8 lg:py-10">
           <div className="min-w-0">
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-terracotta">Notre signature</p>
             <h2 className="mt-3 max-w-[16ch] font-display text-[clamp(2.1rem,8vw,3.75rem)] leading-[0.92]">
               Des recettes qui font <span className="italic text-terracotta">voyager</span>
             </h2>
           </div>
-          <div className="mt-8 grid min-w-0 items-stretch gap-7 sm:mt-10 sm:gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-12">
+          <div className="mt-6 grid min-w-0 items-stretch gap-6 sm:mt-8 sm:gap-7 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-8">
             {lead ? <Feature lead={lead} large film={data?.signatureVideo} /> : <div className="bg-paper-2" aria-hidden="true" />}
             <div className="flex min-h-0 min-w-0 flex-col">
               <div className="min-h-0 max-h-[min(24rem,62vh)] flex-1 overflow-y-auto overscroll-contain rounded-xl border border-line bg-cream [scrollbar-color:rgba(37,26,22,0.25)_transparent] [scrollbar-width:thin] sm:max-h-[min(28rem,64vh)] lg:max-h-[min(42rem,82vh)]">
@@ -131,7 +139,7 @@ export function Home() {
       </section>
 
       <section id="histoire" className="scroll-mt-24 bg-night text-cream">
-        <Reveal className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-10 md:px-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-12 lg:py-14">
+        <Reveal className="mx-auto grid max-w-6xl items-center gap-6 px-4 py-8 md:px-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-8 lg:py-10">
           <div>
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-terracotta">Histoire</p>
             <h2 className="mt-3 font-display text-[clamp(2.1rem,8vw,3.75rem)] leading-[0.92]">
@@ -145,10 +153,10 @@ export function Home() {
                 Notre carte met à l'honneur des plats riches en caractère : viandes braisées, marinades travaillées, sauces parfumées et accompagnements emblématiques.
               </p>
             </div>
-            <p className="mt-8 font-display text-2xl leading-tight sm:text-3xl">
+            <p className="mt-6 font-display text-2xl leading-tight sm:text-3xl">
               ALLOKODRONE, la cuisine africaine d'aujourd'hui.
             </p>
-            <Link className={`${btnGhost} mt-8`} to="/concept">Lire l'histoire</Link>
+            <Link className={`${btnGhost} mt-6`} to="/concept">Lire l'histoire</Link>
           </div>
           <span className="block overflow-hidden rounded-bl-[2rem] lg:rounded-bl-[3rem]">
             <img
@@ -162,7 +170,7 @@ export function Home() {
       </section>
 
       <section id="avis" className="scroll-mt-24 bg-paper-2">
-        <Reveal className="mx-auto max-w-6xl px-4 py-10 md:px-5 lg:py-14">
+        <Reveal className="mx-auto max-w-6xl px-4 py-8 md:px-5 lg:py-10">
           <div className="flex flex-wrap items-end justify-between gap-5">
             <div className="max-w-2xl">
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-terracotta">Avis</p>
@@ -181,65 +189,38 @@ export function Home() {
             ) : null}
           </div>
 
-          {restaurant ? (
-            <div className="mt-10 grid items-stretch gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-              <figure className="flex h-full flex-col rounded-xl border border-line bg-cream px-6 py-8 sm:px-8">
-                <p className="text-xs uppercase tracking-[0.16em] text-terracotta">{restaurant.review.source}</p>
-                <blockquote className="mt-5 flex-1 border-l-2 border-terracotta pl-5">
-                  <p className="font-display text-lg leading-relaxed text-ink sm:text-xl">
-                    « {restaurant.review.quote} »
-                  </p>
-                </blockquote>
-                <figcaption className="mt-8 flex flex-wrap items-baseline justify-between gap-3 border-t border-line pt-5 text-sm">
-                  <span className="font-medium text-ink">{restaurant.review.author}</span>
-                  <span className="text-ink-soft">{restaurant.review.place}</span>
-                </figcaption>
-              </figure>
-
-              <div className="flex h-full flex-col justify-between gap-6 rounded-xl border border-line bg-cream px-6 py-8 text-ink sm:px-8">
-                <div>
-                  <h3 className="font-display text-2xl leading-none text-ink">Répartition</h3>
-                  <ul className="mt-6 space-y-4" aria-label="Répartition des notes">
-                    {(data?.avis?.histogram ?? [5, 4, 3, 2, 1].map((stars) => ({ stars, count: 0 }))).map((item) => {
-                      const max = Math.max(1, ...(data?.avis?.histogram ?? []).map((row) => row.count), 1);
-                      return (
-                        <li key={item.stars} className="flex items-center gap-3">
-                          <span className="w-8 shrink-0 text-sm tabular-nums">{item.stars}★</span>
-                          <span className="h-1.5 flex-1 overflow-hidden bg-paper-2">
-                            <span
-                              className="block h-full bg-terracotta transition-[width] duration-700 ease-out"
-                              style={{ width: `${item.count ? Math.max(10, (item.count / max) * 100) : 0}%` }}
-                            />
-                          </span>
-                          <span className="w-6 shrink-0 text-right text-sm tabular-nums text-ink-soft">{item.count}</span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-                <Link className={`${btn} w-full sm:w-auto`} to="/avis">
-                  Tous les avis
-                </Link>
-              </div>
-            </div>
-          ) : null}
-
-          {data?.avis?.reviews?.length ? (
-            <ul className="mt-8 grid gap-4 md:grid-cols-3">
-              {data.avis.reviews.map((item) => (
+          {googleReviews.length || data?.avis?.reviews?.length ? (
+            <ul className="mt-7 grid gap-4 md:grid-cols-3">
+              {googleReviews.map((item) => (
+                <li key={`google-${item.author}`}>
+                  <HomeQuoteCard author={item.author} source={restaurant?.review.source ?? "Google"} body={item.quote} />
+                </li>
+              ))}
+              {data?.avis?.reviews?.map((item) => (
                 <li key={item.id}>
                   <HomeReviewCard review={item} />
                 </li>
               ))}
             </ul>
           ) : null}
+
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            {googleReviewUrl ? (
+              <a className={`${btn} min-w-56 gap-2`} href={googleReviewUrl} target="_blank" rel="noopener noreferrer">
+                Laisser un avis Google <ArrowMark />
+              </a>
+            ) : null}
+            <Link className={`${btnLine} min-w-40`} to="/avis">
+              Tous les avis
+            </Link>
+          </div>
         </Reveal>
       </section>
 
       {restaurant ? (
         <section id="contact" className="scroll-mt-24 bg-paper">
-          <Reveal className="mx-auto max-w-6xl px-4 py-10 sm:py-12 lg:px-8">
-            <div className="grid items-center gap-6 md:grid-cols-2 md:gap-8">
+          <Reveal className="mx-auto max-w-6xl px-4 py-8 sm:py-10 lg:px-8">
+            <div className="grid items-center gap-5 md:grid-cols-2 md:gap-6">
               <div className="overflow-hidden rounded-2xl bg-[#1a110d]">
                 <img
                   className="aspect-[4/3] w-full object-cover object-center"
@@ -273,7 +254,7 @@ export function Home() {
                     </span>
                   </li>
                 </ul>
-                <div className="mt-8 flex flex-wrap items-center gap-2.5">
+                <div className="mt-6 flex flex-wrap items-center gap-2.5">
                   <a className={`${btn} gap-2`} href={restaurant.maps} target="_blank" rel="noopener noreferrer">
                     Itinéraire
                     <ArrowMark />
@@ -317,25 +298,23 @@ function HomeStars({ value, label }: { value: number; label: string }) {
 
 function HomeReviewCard({ review }: { review: HomeReview }) {
   return (
-    <article className="flex h-full flex-col rounded-xl border border-line bg-cream px-5 py-6 transition-[border-color,transform] duration-300 hover:-translate-y-0.5 hover:border-terracotta/40">
-      <header className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-paper-2 font-display text-sm text-terracotta" aria-hidden="true">
-            {review.initials}
-          </span>
-          <div>
-            <p className="text-sm font-medium text-ink">{review.author}</p>
-            <p className="text-xs text-ink-soft">{review.dateLabel}</p>
-          </div>
-        </div>
-        <HomeStars value={review.stars} label={`${review.stars} sur 5`} />
-      </header>
-      {review.verified ? (
-        <p className="mt-4 inline-flex w-fit border border-line px-2 py-1 text-[0.65rem] uppercase tracking-[0.14em] text-ink-soft">
-          Achat vérifié
-        </p>
-      ) : null}
-      <p className="mt-4 flex-1 text-sm leading-relaxed text-ink">« {review.body} »</p>
+    <HomeQuoteCard
+      author={review.author}
+      source={review.verified ? "Achat vérifié" : `Avis client · ${review.dateLabel}`}
+      body={review.body}
+    />
+  );
+}
+
+function HomeQuoteCard({ author, source, body }: { author: string; source: string; body: string }) {
+  return (
+    <article className="flex h-full min-h-44 flex-col rounded-xl border border-line bg-cream px-5 py-5 shadow-sm transition-[border-color,transform] duration-300 hover:-translate-y-0.5 hover:border-terracotta/40">
+      <span className="font-display text-5xl leading-[0.7] text-terracotta" aria-hidden="true">“</span>
+      <p className="mt-3 flex-1 text-base leading-relaxed text-ink">« {body} »</p>
+      <footer className="mt-5 border-t border-line pt-3">
+        <p className="text-sm font-medium text-ink">{author}</p>
+        <p className="text-xs text-ink-soft">{source}</p>
+      </footer>
     </article>
   );
 }

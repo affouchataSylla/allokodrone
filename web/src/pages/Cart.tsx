@@ -53,8 +53,8 @@ export function Cart() {
   if (!cart && !errors.length) return <div className="mx-auto max-w-6xl px-4"><Pending label="Chargement du panier" /></div>;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 lg:py-12">
-    <div className={cart && cart.lines.length > 0 ? "lg:grid lg:grid-cols-[1fr_20rem] lg:gap-12" : ""}>
+    <div className="mx-auto max-w-6xl px-4 py-6 lg:py-8">
+    <div className={cart && cart.lines.length > 0 ? "lg:grid lg:grid-cols-[1fr_20rem] lg:gap-8" : ""}>
       <div>
         <p className="text-xs uppercase tracking-[0.16em] text-terracotta">Panier</p>
         <h1 className="mt-3 font-display text-5xl leading-none">Votre commande</h1>
@@ -120,7 +120,7 @@ export function Cart() {
         )}
       </div>
       {cart && cart.lines.length > 0 ? (
-        <aside className="mt-8 h-fit lg:mt-24">
+        <aside className="mt-6 h-fit lg:mt-12">
             <div className="border border-line bg-cream p-5">
               {cart.priced ? (
                 <dl className="space-y-2 text-sm">

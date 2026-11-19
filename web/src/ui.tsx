@@ -25,7 +25,7 @@ export function money(cents: number) {
 
 export function Pending({ label = "Chargement" }: { label?: string }) {
   return (
-    <p className="py-16 text-sm text-ink-soft" role="status">
+    <p className="py-8 text-sm text-ink-soft" role="status">
       {label}…
     </p>
   );
@@ -98,10 +98,10 @@ export function Reveal({ className = "", children }: { className?: string; child
 
 export function Empty({ title, text, to, label }: { title: string; text: string; to: string; label: string }) {
   return (
-    <div className="border-t border-line py-10">
+    <div className="border-t border-line py-7">
       <h2 className="font-display text-3xl">{title}</h2>
       <p className="mt-3 max-w-md text-sm leading-relaxed text-ink-soft">{text}</p>
-      <Link className={`${btn} mt-6`} to={to}>
+      <Link className={`${btn} mt-4`} to={to}>
         {label}
       </Link>
     </div>

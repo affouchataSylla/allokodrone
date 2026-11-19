@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 
 export function QuoteBand({ children }: { children: ReactNode }) {
   return (
-    <section className="bg-paper px-4 py-4 sm:px-6 sm:py-7 lg:px-8">
-      <div className="mx-auto max-w-[68rem] rounded-2xl bg-night px-5 py-5 text-cream sm:rounded-3xl sm:px-7 sm:py-6 lg:px-8 lg:py-7">
+    <section className="bg-paper px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+      <div className="mx-auto max-w-[68rem] rounded-2xl bg-night px-5 py-4 text-cream sm:rounded-3xl sm:px-7 sm:py-5 lg:px-8 lg:py-6">
         <div className="flex items-start gap-3 sm:gap-5">
           <span
             className="shrink-0 font-display text-[2.35rem] leading-none text-terracotta sm:text-[3rem]"

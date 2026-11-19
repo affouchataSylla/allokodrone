@@ -151,6 +151,33 @@ CREATE TABLE IF NOT EXISTS payment_methods (
 
 CREATE TABLE IF NOT EXISTS promotions (
   id INTEGER PRIMARY KEY,
+  titre TEXT NOT NULL,
+  prix DECIMAL(10,2) NOT NULL,
+  ancien_prix DECIMAL(10,2),
+  badge_texte TEXT NOT NULL DEFAULT '',
+  afficher_pastille_reduction INTEGER NOT NULL DEFAULT 1,
+  description TEXT NOT NULL DEFAULT '',
+  image_url TEXT NOT NULL DEFAULT '',
+  cta_texte TEXT NOT NULL DEFAULT 'COMMANDER MAINTENANT',
+  cta_lien TEXT NOT NULL DEFAULT '/carte',
+  mention_legale TEXT NOT NULL DEFAULT '',
+  date_debut TEXT NOT NULL,
+  date_fin TEXT NOT NULL,
+  actif INTEGER NOT NULL DEFAULT 0,
+  priorite INTEGER NOT NULL DEFAULT 0,
+  pages_cibles TEXT NOT NULL DEFAULT '["accueil"]',
+  frequence TEXT NOT NULL DEFAULT 'session',
+  delai_affichage INTEGER NOT NULL DEFAULT 6,
+  intention_de_sortie INTEGER NOT NULL DEFAULT 0,
+  couleur_fond TEXT NOT NULL DEFAULT '#F6EBD9',
+  couleur_accent TEXT NOT NULL DEFAULT '#FF6A13',
+  theme TEXT NOT NULL DEFAULT 'beige',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS promo_codes (
+  id INTEGER PRIMARY KEY,
   code TEXT NOT NULL UNIQUE COLLATE NOCASE,
   label TEXT NOT NULL,
   kind TEXT NOT NULL CHECK(kind IN ('amount', 'percent')),
@@ -158,6 +185,31 @@ CREATE TABLE IF NOT EXISTS promotions (
   percent INTEGER,
   active INTEGER NOT NULL DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS promotion_popup_stats (
+  promo_id INTEGER PRIMARY KEY REFERENCES promotions(id) ON DELETE CASCADE,
+  impressions INTEGER NOT NULL DEFAULT 0,
+  clicks INTEGER NOT NULL DEFAULT 0,
+  closes INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS promotion_popup_events (
+  promo_id INTEGER NOT NULL REFERENCES promotions(id) ON DELETE CASCADE,
+  session_id TEXT NOT NULL,
+  event TEXT NOT NULL CHECK(event IN ('impression', 'click', 'close')),
+  event_day TEXT NOT NULL,
+  PRIMARY KEY (promo_id, session_id, event, event_day)
+);
+
+CREATE TABLE IF NOT EXISTS promotion_popup_images (
+  id TEXT PRIMARY KEY,
+  mime_type TEXT NOT NULL CHECK(mime_type IN ('image/webp', 'image/jpeg')),
+  data BLOB NOT NULL,
+  created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_promotions_active_priority
+  ON promotions (actif, priorite DESC, date_debut, date_fin);
 
 CREATE TABLE IF NOT EXISTS orders (
   id INTEGER PRIMARY KEY,
@@ -293,7 +345,11 @@ def _ensure_driver_role(conn):
 
 def init_db(path=None):
     conn = connect(path)
+    _migrate_promo_codes(conn)
     conn.executescript(SCHEMA)
+    promotion_columns = {row[1] for row in conn.execute("PRAGMA table_info(promotions)")}
+    if "theme" not in promotion_columns:
+        conn.execute("ALTER TABLE promotions ADD COLUMN theme TEXT NOT NULL DEFAULT 'beige'")
     _ensure_driver_role(conn)
     columns = {row[1] for row in conn.execute("PRAGMA table_info(orders)")}
     if "stripe_session_id" not in columns:
@@ -321,3 +377,27 @@ def init_db(path=None):
 
     ensure_review_tables(conn)
     return conn
+
+
+def _migrate_promo_codes(conn):
+    tables = {
+        row[0]
+        for row in conn.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('promotions', 'promo_codes')"
+        )
+    }
+    if "promotions" not in tables:
+        return
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(promotions)")}
+    if "code" not in columns:
+        return
+    if "promo_codes" not in tables:
+        conn.execute("ALTER TABLE promotions RENAME TO promo_codes")
+        return
+    conn.execute(
+        """
+        INSERT OR IGNORE INTO promo_codes (id, code, label, kind, amount_cents, percent, active)
+        SELECT id, code, label, kind, amount_cents, percent, active FROM promotions
+        """
+    )
+    conn.execute("DROP TABLE promotions")

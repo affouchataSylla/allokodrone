@@ -75,7 +75,11 @@ PUBLISHED_PRICES = {
 }
 
 
-def seed(conn):
+def seed(conn, *, publish_demo=False):
+    from app.promo_popups import seed_demo_promotion, seed_premium_promotion
+
+    seed_demo_promotion(conn, active=publish_demo)
+    seed_premium_promotion(conn)
     existing = conn.execute("SELECT COUNT(*) AS n FROM categories").fetchone()["n"]
     if existing:
         _refresh_published_copy(conn)

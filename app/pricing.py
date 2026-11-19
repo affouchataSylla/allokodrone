@@ -95,7 +95,7 @@ def apply_promo(conn, code, subtotal):
     if not code:
         return 0, None, None
     row = conn.execute(
-        "SELECT * FROM promotions WHERE code = ? AND active = 1",
+        "SELECT * FROM promo_codes WHERE code = ? AND active = 1",
         (code.strip(),),
     ).fetchone()
     if not row:

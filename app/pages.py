@@ -1,4 +1,5 @@
 import json
+import re
 
 from app.admin_store import (
     add_promo,
@@ -1265,17 +1266,21 @@ def admin_notifications(ctx, message=""):
     return _html(ctx, "Notifications", body, admin=True)
 
 
-def admin_promotions(ctx, message=""):
-    promos = ctx.conn.execute("SELECT * FROM promotions ORDER BY id").fetchall()
+def admin_promo_codes(ctx, message=""):
+    promos = ctx.conn.execute("SELECT * FROM promo_codes ORDER BY id").fetchall()
     promo_rows = "".join(
         f'<li class="border-b border-line py-2 text-sm">{esc(promo["code"])} — {esc(promo["label"])}</li>'
         for promo in promos
     )
     body = f"""
-      <h1 class="{H1}">Promotions</h1>
+      <h1 class="{H1}">Codes promo</h1>
+      <nav class="mt-5 flex flex-wrap gap-2 border-b border-line pb-3" aria-label="Gestion des promotions">
+        <a class="inline-flex min-h-11 items-center rounded-xl bg-paper-2 px-4 text-sm font-medium text-ink" href="/admin/codes-promo" aria-current="page">Codes promo</a>
+        <a class="inline-flex min-h-11 items-center rounded-xl px-4 text-sm text-ink-soft hover:bg-paper-2 hover:text-ink" href="/admin/promotions">Pop-ups promotionnels</a>
+      </nav>
       {f'<p class="mt-4 {NOTICE}">{esc(message)}</p>' if message else ''}
       <ul class="mt-6 max-w-xl">{promo_rows or '<li class="text-sm text-ink-soft">Aucune promotion.</li>'}</ul>
-      <form class="mt-8 max-w-xl {PANEL_PAD}" method="post" action="/admin/promotions">
+      <form class="mt-8 max-w-xl {PANEL_PAD}" method="post" action="/admin/codes-promo">
         {hidden('csrf', ctx.session['csrf'])}
         <label class="{FIELD}"><span>Code</span><input class="{INPUT}" name="code" required></label>
         <label class="{FIELD}"><span>Libellé</span><input class="{INPUT}" name="libelle" required></label>
@@ -1285,6 +1290,18 @@ def admin_promotions(ctx, message=""):
       </form>
     """
     return _html(ctx, "Promotions", body, admin=True)
+
+
+def admin_promotions(ctx):
+    build_index = ROOT / "web" / "dist" / "index.html"
+    content = build_index.read_text(encoding="utf-8")
+    script = re.search(r'<script[^>]+src="(/assets/[^"]+\.js)"', content)
+    stylesheet = re.search(r'<link[^>]+href="(/assets/[^"]+\.css)"', content)
+    if not script or not stylesheet:
+        raise RuntimeError("Assets de l’interface des promotions introuvables.")
+    body = f'<div id="root"></div><script type="module" crossorigin src="{esc(script.group(1))}"></script>'
+    head = f'<link rel="stylesheet" crossorigin href="{esc(stylesheet.group(1))}">'
+    return _html(ctx, "Pop-ups promotionnels", body, admin=True, extra_head=head)
 
 
 def admin_drivers(ctx, message=""):
@@ -1514,7 +1531,7 @@ def handle_order_post(ctx, form):
     return order, errors
 
 
-def _html(ctx, title, body, admin=False):
+def _html(ctx, title, body, admin=False, extra_head=""):
     from app.notify import mark_seen, unseen_count
     from app.ui import page as render
 
@@ -1534,4 +1551,5 @@ def _html(ctx, title, body, admin=False):
         current=getattr(ctx, "path", ""),
         csrf=ctx.session["csrf"] if ctx.session else "",
         notify_n=notify_n,
+        extra_head=extra_head,
     )

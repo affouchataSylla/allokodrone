@@ -301,7 +301,7 @@ export function Checkout() {
   if (!data && !errors.length) return <div className="mx-auto max-w-6xl px-4"><Pending /></div>;
   if (data && data.cart.lines.length === 0) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-12">
+      <div className="mx-auto max-w-6xl px-4 py-8">
         <h1 className="font-display text-5xl">Votre panier est vide</h1>
         <Link className={`${btn} mt-6`} to="/carte">Voir la carte</Link>
       </div>
@@ -309,7 +309,7 @@ export function Checkout() {
   }
 
   return (
-    <form className="mx-auto max-w-6xl px-4 py-8 lg:py-12" noValidate onSubmit={(event) => void submit(event)}>
+    <form className="mx-auto max-w-6xl px-4 py-6 lg:py-8" noValidate onSubmit={(event) => void submit(event)}>
       <p className="text-xs uppercase tracking-[0.16em] text-terracotta">Commande</p>
       <h1 className="mt-3 font-display text-[clamp(1.85rem,7vw,3.25rem)] leading-none">Retrait ou livraison</h1>
       {data ? (

@@ -47,7 +47,7 @@ export function Account() {
   if (!data && !errors.length) return <div className="mx-auto max-w-6xl px-4"><Pending /></div>;
   if (data?.user?.role === "admin") {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-12">
+      <div className="mx-auto max-w-3xl px-4 py-8">
         <h1 className="font-display text-5xl">Administration</h1>
         <p className="mt-4 text-sm text-ink-soft">Vous êtes connecté à l'espace restaurant.</p>
         <a className={`${btn} mt-6`} href="/admin/">Ouvrir l'administration</a>
@@ -56,9 +56,9 @@ export function Account() {
   }
   if (data?.user) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-10">
+      <div className="mx-auto max-w-3xl px-4 py-7">
         <h1 className="font-display text-5xl">Bonjour {data.user.name}</h1>
-        <h2 className="mt-8 font-display text-3xl">Commandes</h2>
+        <h2 className="mt-6 font-display text-3xl">Commandes</h2>
         {data.orders.length ? (
           <ul className="mt-4 border-t border-line">
             {data.orders.map((order) => (
@@ -79,9 +79,9 @@ export function Account() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
+    <div className="mx-auto max-w-6xl px-4 py-7">
       <Alert errors={errors} />
-      <div className="mt-6 grid gap-12 lg:grid-cols-2">
+      <div className="mt-5 grid gap-8 lg:grid-cols-2">
       <section>
         <h1 className="font-display text-5xl">Connexion</h1>
         <form className="mt-2" onSubmit={(event) => void send("/api/compte/connexion", formValues(event), event)}>

@@ -57,7 +57,7 @@ export function Product() {
 
   if (missing) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-12">
+      <div className="mx-auto max-w-6xl px-4 py-8">
         <h1 className="font-display text-4xl">Produit introuvable</h1>
         <Link className={`${btn} mt-6`} to="/carte">Retour à la carte</Link>
       </div>
@@ -66,7 +66,7 @@ export function Product() {
   if (!data && !errors.length) return <div className="mx-auto max-w-6xl px-4"><Pending /></div>;
   if (!data) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-10">
+      <div className="mx-auto max-w-6xl px-4 py-7">
         <Alert errors={errors} />
       </div>
     );
@@ -116,7 +116,7 @@ export function Product() {
       >
         ←
       </Link>
-      <article className="motion-rise mt-6 grid gap-8 lg:grid-cols-2 lg:items-start">
+      <article className="motion-rise mt-5 grid gap-6 lg:grid-cols-2 lg:items-start">
         {(() => {
           const fallbacks: Record<string, string> = {
             burgers: "/images/burger.jpg",

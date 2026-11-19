@@ -23,8 +23,8 @@ function Slogan({ text }: { text: string }) {
 
 export function BrandCta({ slogan, address, mapsUrl }: BrandCtaProps) {
   return (
-    <section className="mx-auto max-w-[68rem] px-4 pb-12 pt-7 sm:px-6 sm:pb-16 sm:pt-10 lg:px-8 lg:py-14">
-      <div className="flex items-center gap-4 sm:gap-6 lg:gap-8">
+    <section className="mx-auto max-w-[68rem] px-4 pb-8 pt-5 sm:px-6 sm:pb-10 sm:pt-7 lg:px-8 lg:py-10">
+      <div className="flex items-center gap-4 sm:gap-6 lg:gap-7">
         <img
           className="h-14 w-auto max-w-[7.5rem] shrink-0 object-contain object-left sm:h-20 sm:max-w-[13rem] lg:h-24 lg:max-w-[15rem]"
           src={`${import.meta.env.BASE_URL}images/logo-dark.png`}
@@ -40,7 +40,7 @@ export function BrandCta({ slogan, address, mapsUrl }: BrandCtaProps) {
         </p>
       </div>
 
-      <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
+      <div className="mt-5 flex flex-col gap-3 sm:mt-6 sm:flex-row sm:flex-wrap">
         <Link className={`${btn} w-full sm:w-auto`} to="/carte">
           Voir la carte →
         </Link>
@@ -51,7 +51,7 @@ export function BrandCta({ slogan, address, mapsUrl }: BrandCtaProps) {
 
       {mapsUrl ? (
         <a
-          className="mt-6 inline-flex max-w-full items-start gap-2.5 text-[0.92rem] leading-snug text-ink transition-colors hover:text-terracotta"
+          className="mt-4 inline-flex max-w-full items-start gap-2.5 text-[0.92rem] leading-snug text-ink transition-colors hover:text-terracotta"
           href={mapsUrl}
           target="_blank"
           rel="noopener noreferrer"
@@ -60,7 +60,7 @@ export function BrandCta({ slogan, address, mapsUrl }: BrandCtaProps) {
           <span className="min-w-0">{address}</span>
         </a>
       ) : (
-        <p className="mt-6 flex max-w-full items-start gap-2.5 text-[0.92rem] leading-snug text-ink">
+        <p className="mt-4 flex max-w-full items-start gap-2.5 text-[0.92rem] leading-snug text-ink">
           <PinMark className="mt-0.5 h-4 w-4 shrink-0 text-terracotta" />
           <span className="min-w-0">{address}</span>
         </p>

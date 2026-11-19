@@ -40,7 +40,7 @@ export function TrackSteps({ events }: { events: { status: string; label?: strin
 export function TrackCards({ orders }: { orders: TrackedOrder[] }) {
   if (!orders.length) return null;
   return (
-    <section className="mt-10" aria-label="Suivi">
+    <section className="mt-8" aria-label="Suivi">
       <p className="text-xs uppercase tracking-[0.16em] text-terracotta">Suivi</p>
       <div className={orders.length > 1 ? "mt-4 grid items-start gap-4 md:grid-cols-2" : "mt-4"}>
         {orders.map((order) => (

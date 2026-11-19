@@ -57,8 +57,8 @@ export function Menu() {
   const total = (data?.categories ?? []).reduce((sum, item) => sum + item.count, 0);
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-6xl px-4 py-8 lg:py-12">
-      <h1 className="motion-rise font-display text-[clamp(2.1rem,8vw,3.25rem)] leading-none">La carte</h1>
+    <div className="mx-auto w-full min-w-0 max-w-6xl px-4 py-6 lg:py-8">
+      <h1 className="motion-rise text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-terracotta">La carte</h1>
       <nav className="mt-6 flex flex-wrap gap-2" aria-label="Catégories">
         <Link className={chip(!category)} to={href("")} aria-current={!category ? "page" : undefined}>
           Tout
@@ -109,7 +109,7 @@ export function Menu() {
           ) : null}
           {[...sections.entries()].map(([name, products]) => (
             <Reveal key={name}>
-            <section className="mt-8">
+            <section className="mt-6">
               <h2 className="font-display text-3xl">{name}</h2>
               <ul className="mt-4 grid grid-cols-1 gap-4 min-[460px]:grid-cols-2 lg:grid-cols-3">
                 {products.map((product) => (

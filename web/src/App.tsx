@@ -14,12 +14,14 @@ import { NotFound } from "./pages/NotFound";
 import { Order } from "./pages/Order";
 import { PaymentFailure, PaymentSuccess } from "./pages/Payment";
 import { Product } from "./pages/Product";
+import { PromotionAdmin } from "./pages/PromotionAdmin";
 
 export function App() {
   return (
     <BrowserRouter basename={BASE.replace(/\/$/, "") || undefined}>
       <SessionProvider>
         <Routes>
+          <Route path="/admin/promotions" element={<PromotionAdmin />} />
           <Route path="/admin" element={<AdminRedirect />} />
           <Route path="/admin/*" element={<AdminRedirect />} />
           <Route element={<Shell />}>

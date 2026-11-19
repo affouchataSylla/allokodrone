@@ -6,7 +6,13 @@ export type Restaurant = {
   deliveryOpen: boolean;
   instagram: string;
   maps: string;
-  review: { quote: string; author: string; place: string; source: string };
+  review: {
+    quote: string;
+    author: string;
+    place: string;
+    source: string;
+    reviews: { quote: string; author: string }[];
+  };
   offer: string;
 };
 

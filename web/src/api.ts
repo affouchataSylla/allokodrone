@@ -98,3 +98,42 @@ export async function api<T>(path: string, init?: { method?: string; body?: unkn
   }
   return data as T;
 }
+
+export async function apiUpload<T>(path: string, body: FormData): Promise<T> {
+  await ensureCsrf();
+  const url = path.startsWith("http") ? path : apiUrl(path);
+  const request = () =>
+    fetch(url, {
+      method: "POST",
+      credentials,
+      headers: { Accept: "application/json", "X-CSRF": csrf },
+      body,
+    });
+  let response: Response;
+  try {
+    response = await request();
+  } catch {
+    throw new ApiError(["Connexion interrompue. Réessayez."], 0);
+  }
+  let data: { errors?: string[]; error?: string } = {};
+  try {
+    data = await response.json();
+  } catch {
+    data = {};
+  }
+  if (!response.ok && response.status === 400 && data.error === "Requete refusee.") {
+    csrf = "";
+    await ensureCsrf();
+    response = await request();
+    try {
+      data = await response.json();
+    } catch {
+      data = {};
+    }
+  }
+  if (!response.ok) {
+    const errors = Array.isArray(data.errors) ? data.errors : [data.error || "La requête a échoué."];
+    throw new ApiError(errors, response.status);
+  }
+  return data as T;
+}

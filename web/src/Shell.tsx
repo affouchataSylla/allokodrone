@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router";
 import { asset } from "./base";
 import { CalendarMark, InstagramMark, PinMark, PlaneMark } from "./components/brand/Marks";
+import { PromotionPopup } from "./components/PromotionPopup";
 import { ServiceBar } from "./ServiceBar";
 import { useSession } from "./session";
 
@@ -186,7 +187,7 @@ export function Shell() {
       </main>
 
       <footer className="relative z-0 mt-auto bg-night text-cream">
-        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8 lg:px-8 lg:py-14">
+        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-7 lg:px-8 lg:py-10">
           <div>
             <Link to="/" className="inline-block">
               <img className="max-h-12 w-auto max-w-[10rem] object-contain" src={asset("images/logo-light.png")} width="176" height="99" alt="ALLOKODRONE" />
@@ -269,6 +270,7 @@ export function Shell() {
           </p>
         </div>
       </footer>
+      <PromotionPopup pathname={pathname} />
     </div>
   );
 }

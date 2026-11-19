@@ -27,7 +27,7 @@ function useOrder(ref: string) {
 function Summary({ order }: { order: OrderPayload | null }) {
   if (!order) return null;
   return (
-    <aside className="mt-8 border border-line p-5">
+    <aside className="mt-6 border border-line p-5">
       <h2 className="font-display text-2xl">Récapitulatif {order.ref}</h2>
       <ul className="mt-4 border-t border-line">
         {order.lines.map((line) => (
@@ -75,7 +75,7 @@ export function PaymentSuccess() {
   }, [ref, sessionId, session?.csrf]);
 
   return (
-    <article className="mx-auto max-w-3xl px-4 py-12">
+    <article className="mx-auto max-w-3xl px-4 py-8">
       {state === "loading" ? <Pending /> : null}
       {state === "paid" ? (
         <>
@@ -129,7 +129,7 @@ export function PaymentFailure() {
   }
 
   return (
-    <article className="mx-auto max-w-3xl px-4 py-12">
+    <article className="mx-auto max-w-3xl px-4 py-8">
       <p className="text-xs uppercase tracking-[0.16em] text-terracotta">Paiement interrompu</p>
       <h1 className="mt-3 font-display text-5xl leading-none">Le paiement n'a pas abouti</h1>
       <p className="mt-4 text-sm">Aucun encaissement n'a été confirmé. Vous pouvez relancer le paiement de la même commande.</p>

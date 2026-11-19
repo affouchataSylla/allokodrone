@@ -2,6 +2,8 @@ import json
 import mimetypes
 import os
 import traceback
+from email.parser import BytesParser
+from email.policy import default as email_policy
 from urllib.parse import parse_qs, urlparse
 
 from app.auth import (
@@ -34,6 +36,7 @@ from app.pages import (
     admin_notifications,
     admin_products,
     admin_promotions,
+    admin_promo_codes,
     admin_settings,
     admin_slots,
     cart,
@@ -63,6 +66,9 @@ from app.admin_store import (
     set_zone_active,
 )
 from app.orders import mark_collected, set_status
+
+
+MAX_PROMO_UPLOAD_REQUEST_BYTES = 2 * 1024 * 1024 + 64 * 1024
 
 
 class Response:
@@ -118,6 +124,27 @@ def _payload(body, content_type):
     if not isinstance(data, dict):
         return None, True
     return data, False
+
+
+def _multipart_image(body, content_type):
+    headers = (
+        f"Content-Type: {content_type}\r\nMIME-Version: 1.0\r\n\r\n".encode("ascii", "ignore")
+        + body
+    )
+    message = BytesParser(policy=email_policy).parsebytes(headers)
+    if not message.is_multipart():
+        return None, "Fichier image manquant."
+    image = None
+    for part in message.iter_parts():
+        if part.get_param("name", header="content-disposition") != "image":
+            continue
+        if image is not None:
+            return None, "Un seul fichier image est autorisé."
+        image = {
+            "data": part.get_payload(decode=True) or b"",
+            "mime_type": part.get_content_type(),
+        }
+    return (image, None) if image else (None, "Fichier image manquant.")
 
 
 def _asset(path):
@@ -226,10 +253,15 @@ def handle_http(conn, method, target, headers, body):
         if static:
             return static
     content_type = headers.get("content-type", "")
-    payload, bad_json = _payload(body, content_type)
-    if bad_json:
-        return Response(400, json.dumps({"error": "JSON invalide."}), content_type="application/json; charset=utf-8")
-    form = _form(body, query if method == "POST" else {}, content_type)
+    if path == "/api/admin/promotions/upload" and method == "POST" and content_type.startswith("multipart/form-data"):
+        upload, upload_error = _multipart_image(body, content_type)
+        payload = {"_upload": upload, "_upload_error": upload_error}
+        form = {}
+    else:
+        payload, bad_json = _payload(body, content_type)
+        if bad_json:
+            return Response(400, json.dumps({"error": "JSON invalide."}), content_type="application/json; charset=utf-8")
+        form = _form(body, query if method == "POST" else {}, content_type)
     cookie = _cookie_value(headers.get("cookie", ""), "sid")
     session = get_session(conn, cookie)
     new_sid = None
@@ -557,7 +589,15 @@ def dispatch(ctx, method, path, query, form, payload=None):
     if path == "/admin/notifications" and method == "GET":
         return html(admin_notifications(ctx))
     if path == "/admin/promotions" and method == "GET":
-        return html(admin_promotions(ctx))
+        index = ROOT / "web" / "dist" / "index.html"
+        if not index.is_file():
+            return Response(503, "Interface admin indisponible.")
+        try:
+            return html(admin_promotions(ctx))
+        except RuntimeError:
+            return Response(503, "Interface admin indisponible.")
+    if path == "/admin/codes-promo" and method == "GET":
+        return html(admin_promo_codes(ctx))
     if path == "/admin/reglages" and method == "GET":
         return html(admin_settings(ctx))
     if path == "/admin/equipe" and method == "POST":
@@ -646,13 +686,13 @@ def dispatch(ctx, method, path, query, form, payload=None):
         error = add_distance_band(ctx.conn, form)
         set_flash(ctx.conn, ctx.session["id"], error or "Palier enregistré.")
         return redirect("/admin/livraison")
-    if path == "/admin/promotions" and method == "POST":
+    if path == "/admin/codes-promo" and method == "POST":
         try:
             error = add_promo(ctx.conn, form)
         except Exception:
             error = "Ce code existe deja."
         set_flash(ctx.conn, ctx.session["id"], error or "Promotion enregistrée.")
-        return redirect("/admin/promotions")
+        return redirect("/admin/codes-promo")
     return Response(404, "Page introuvable.")
 
 
@@ -687,7 +727,7 @@ def _cookie_value(header, name):
 
 def prepare(path=None):
     conn = init_db(path)
-    seed(conn)
+    seed(conn, publish_demo=bool(os.environ.get("VERCEL")))
     from app.orders import ensure_upcoming_slots
 
     ensure_upcoming_slots(conn)
@@ -723,12 +763,23 @@ def main():
 
         def _serve(self, method):
             length = int(self.headers.get("Content-Length") or 0)
-            body = self.rfile.read(length) if length else b""
-            conn = prepare(db_path)
-            try:
-                response = handle_http(conn, method, self.path, {k.lower(): v for k, v in self.headers.items()}, body)
-            finally:
-                conn.close()
+            path = self.path.split("?", 1)[0]
+            if (
+                path == "/api/admin/promotions/upload"
+                and length > MAX_PROMO_UPLOAD_REQUEST_BYTES
+            ):
+                response = Response(
+                    413,
+                    json.dumps({"error": "L'image doit faire 2 Mo maximum."}),
+                    content_type="application/json; charset=utf-8",
+                )
+            else:
+                body = self.rfile.read(length) if length else b""
+                conn = prepare(db_path)
+                try:
+                    response = handle_http(conn, method, self.path, {k.lower(): v for k, v in self.headers.items()}, body)
+                finally:
+                    conn.close()
             self.send_response(response.status)
             self.send_header("Content-Type", response.content_type)
             self.send_header("X-Content-Type-Options", "nosniff")

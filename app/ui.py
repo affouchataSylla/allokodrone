@@ -81,12 +81,12 @@ def _admin_nav_items(role):
         ("/admin/horaires", "Horaires", "hours", False),
         ("/admin/creneaux", "Créneaux", "slots", False),
         ("/admin/notifications", "Notifications", "bell", False),
-        ("/admin/promotions", "Promotions", "promo", False),
+        ("/admin/codes-promo", "Codes promo", "promo", False),
         ("/admin/reglages", "Réglages", "settings", False),
     ]
 
 
-def _admin_document(title, body, flash, current, csrf, notify_n=0, role="admin"):
+def _admin_document(title, body, flash, current, csrf, notify_n=0, role="admin", extra_head=""):
     items = _admin_nav_items(role)
     home = "/admin/livreurs" if role == "driver" else "/admin"
     section = "Livraison" if role == "driver" else "Service"
@@ -94,6 +94,8 @@ def _admin_document(title, body, flash, current, csrf, notify_n=0, role="admin")
     links = []
     for href, name, icon, exact in items:
         active = current == href if exact else current == href or current.startswith(href + "/")
+        if href == "/admin/codes-promo" and current == "/admin/promotions":
+            active = True
         state = "bg-paper-2 font-medium text-ink" if active else "text-ink-soft hover:bg-paper hover:text-ink"
         current_attr = ' aria-current="page"' if active else ""
         badge = ""
@@ -126,6 +128,7 @@ def _admin_document(title, body, flash, current, csrf, notify_n=0, role="admin")
   <meta name="theme-color" content="#f5dfbc">
   <link rel="icon" href="/images/logo-dark.png" type="image/png">
   <link rel="stylesheet" href="/css/fonts.css">
+  {extra_head}
   <link rel="stylesheet" href="/css/app.css">
 </head>
 <body class="bg-paper font-sans text-ink antialiased">
@@ -226,9 +229,11 @@ def login_page(title, body, flash=""):
 </html>"""
 
 
-def page(title, body, *, cart_n=0, flash="", user=None, admin=False, current="", csrf="", notify_n=0):
+def page(title, body, *, cart_n=0, flash="", user=None, admin=False, current="", csrf="", notify_n=0, extra_head=""):
     if admin and user and user["role"] in ("admin", "driver"):
-        return _admin_document(title, body, flash, current, csrf, notify_n, role=user["role"])
+        return _admin_document(
+            title, body, flash, current, csrf, notify_n, role=user["role"], extra_head=extra_head
+        )
     account = "Compte"
     if user and user["role"] == "admin":
         account = "Admin"
@@ -261,6 +266,7 @@ def page(title, body, *, cart_n=0, flash="", user=None, admin=False, current="",
   <meta name="theme-color" content="#f5dfbc">
   <link rel="icon" href="/images/logo-dark.png" type="image/png">
   <link rel="stylesheet" href="/css/fonts.css">
+  {extra_head}
   <link rel="stylesheet" href="/css/app.css">
 </head>
 <body class="bg-paper font-sans text-ink antialiased">
